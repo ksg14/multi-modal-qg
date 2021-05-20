@@ -71,5 +71,6 @@ if __name__ == '__main__':
 
         if status == 1:
             print (f"Failed for {question ['question_id']}")
+            break
 
     print ('Done!')

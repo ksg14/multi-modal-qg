@@ -38,4 +38,5 @@ if __name__ == '__main__':
         status = clip_audio (save_path, question ['video_id'], question ['question_id'], question ['answer_start'], question ['answer_end'], audio_path)
         if status == 1:
             print (f"Failed for {question ['question_id']}")
+            break
     print ('Done!')

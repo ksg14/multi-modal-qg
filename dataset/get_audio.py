@@ -33,4 +33,5 @@ if __name__ == '__main__':
         status = save_audio (save_path, video ['id'], video_path)
         if status == 1:
             print (f'Failed for {video ["id"]}')
+            break
     print ('Done!')
