@@ -1,5 +1,8 @@
 # Custom
 todo.txt
+dataset/subs*
+dataset/questions*
+dataset/vid*
 data/
 glove.6B/
 subs/
