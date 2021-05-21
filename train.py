@@ -12,7 +12,7 @@ import json
 import pickle
 
 from model.encoder import AudioVideoEncoder, TextEncoder
-from model.decoder import Decoder
+from model.decoder import AttnDecoder, Decoder
 
 from config import Config
 from utils.dataset import VQGDataset
@@ -127,13 +127,23 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
+                enc_outputs = torch.zeros(pred_max_len, 128)
 
-                text_enc_out, text_enc_hidden = text_enc_model (context_tensor, text_enc_hidden)
+                loss = 0
 
+                for ei in range (context_len):
+                    enc_output, text_enc_hidden = text_enc_model(context_tensor [ei], text_enc_hidden)
+                    enc_outputs [ei] = enc_outputs [0, 0]
+
+                dec_input = torch.tensor([['<start>']])
                 dec_hidden = text_enc_hidden
-                y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
 
-                loss = criterion(y_pred [-1], target [0][-1].view (-1))
+                # y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
+
+                for di in range (target_len):
+                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, dec_hidden, enc_outputs)
+                    loss += criterion (dec_output, target [di])
+                    dec_input = target [di]  # Teacher forcing
 
                 loss.backward()
 
@@ -142,7 +152,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 dec_optimizer.step()
 
                 with torch.no_grad():          
-                    epoch_stats ['train']['loss'] [-1] += loss.item () / n_len
+                    epoch_stats ['train']['loss'] [-1] += (loss.item () / target_len) / n_len
                 
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 break
@@ -172,6 +182,7 @@ if __name__ == '__main__':
     config = Config ()
 
     av_emb = 128 + 400 # + 128
+    max_length = 20
     
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
     weights_matrix = weights_matrix.long ()
@@ -195,13 +206,22 @@ if __name__ == '__main__':
                         emb_dim=emb_dim, \
                         emb_layer=emb_layer)
     
-    dec_model = Decoder (num_layers=config.dec_lstm_layers, \
-                        dropout=config.dec_lstm_dropout, \
+    # dec_model = Decoder (num_layers=config.dec_lstm_layers, \
+    #                     dropout=config.dec_lstm_dropout, \
+    #                     hidden_dim=config.dec_lstm_hidden_dim, \
+    #                     n_vocab=n_vocab, \
+    #                     word_emb_dim=emb_dim, \
+    #                     av_emb_dim=av_emb, \
+    #                     emb_layer=emb_layer)
+    
+    dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
+                        dropout_p=config.dec_lstm_dropout, \
                         hidden_dim=config.dec_lstm_hidden_dim, \
                         n_vocab=n_vocab, \
                         word_emb_dim=emb_dim, \
                         av_emb_dim=av_emb, \
-                        emb_layer=emb_layer)
+                        emb_layer=emb_layer, \
+                        max_length=20)
 
     criterion = CrossEntropyLoss()
     av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)

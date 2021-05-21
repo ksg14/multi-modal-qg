@@ -47,38 +47,49 @@ class Decoder (Module):
         xavier_uniform_ (self.out_layer.weight)
         normal_ (self.out_layer.bias)
 
-class AttnDecoderRNN(Module):
-    def __init__(self, hidden_size, output_size, max_length, dropout_p=0.1):
-        super(AttnDecoderRNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.output_size = output_size
+class AttnDecoder (Module):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, max_length):
+        super(AttnDecoder, self).__init__()
+        self.num_layers = num_layers
+        self.hidden_dim = hidden_dim
+        self.n_vocab = n_vocab
         self.dropout_p = dropout_p
         self.max_length = max_length
+        self.av_emb_dim = av_emb_dim
+        self.word_emb_dim = word_emb_dim
+        self.emb_layer = emb_layer
 
-        self.embedding = Embedding (self.output_size, self.hidden_size)
-        self.attn = Linear (self.hidden_size * 2, self.max_length)
+        self.attn = Linear (self.emb_dim + self.hidden_dim, self.max_length)
         self.attn_combine = Linear (self.hidden_size * 2, self.hidden_size)
         self.dropout = Dropout (self.dropout_p)
         self.gru = GRU (self.hidden_size, self.hidden_size)
         self.out = Linear (self.hidden_size, self.output_size)
 
-    def forward(self, input, hidden, encoder_outputs):
-        embedded = self.embedding(input).view(1, 1, -1)
-        embedded = self.dropout(embedded)
+    def forward(self, word, enc_seq_len, hidden, encoder_outputs):
+        embedded = self.emb_layer (word).view(1, 1, -1)
+        # embedded = self.dropout(embedded)
+        print (embedded.shape)
+        print (hidden [0].shape)
 
-        attn_weights = F.softmax(
-            self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
-        attn_applied = torch.bmm(attn_weights.unsqueeze(0),
-                                 encoder_outputs.unsqueeze(0))
+        att_pre_soft = self.attn(torch.cat((embedded[0], hidden[0]), 1))
 
-        output = torch.cat((embedded[0], attn_applied[0]), 1)
-        output = self.attn_combine(output).unsqueeze(0)
+        print (att_pre_soft.shape)
 
-        output = F.relu(output)
-        output, hidden = self.gru(output, hidden)
 
-        output = F.log_softmax(self.out(output[0]), dim=1)
-        return output, hidden, attn_weights
+        # attn_weights = F.softmax(
+        #     self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
+        # attn_applied = torch.bmm(attn_weights.unsqueeze(0),
+        #                          encoder_outputs.unsqueeze(0))
+
+        # output = torch.cat((embedded[0], attn_applied[0]), 1)
+        # output = self.attn_combine(output).unsqueeze(0)
+
+        # output = F.relu(output)
+        # output, hidden = self.gru(output, hidden)
+
+        # output = F.log_softmax(self.out(output[0]), dim=1)
+        # return output, hidden, attn_weights
+        return
     
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size)

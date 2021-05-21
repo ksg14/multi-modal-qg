@@ -44,13 +44,13 @@ class VQGDataset (Dataset):
 
         # Target Question
         if self.text_transform:
-            question = self.text_transform (f"<start> {question_str}", self.vocab)
+            question = self.text_transform (f"{question_str}", self.vocab)
         
         if self.text_transform:
             target = self.text_transform (f"{question_str} <end>", self.vocab)
 
         context_seq_len = context_tensor.shape [0]
-        target_seq_len = target.shape [0]      
+        target_seq_len = target.shape [0]
         
         return frames, audio_file, context_tensor, question, target, context_seq_len, target_seq_len
 
