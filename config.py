@@ -25,7 +25,7 @@ class Config():
 
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
-    dataset_path = Path (r'../dataset')
+    dataset_path = Path (r'dataset')
     subs_path = dataset_path / 'subs'
     video_path = dataset_path / 'vids'
     audio_path = dataset_path / 'audio'
@@ -50,7 +50,8 @@ class Config():
 
     # glove
     glove_emb_dim = 50
-    glove_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\saliency_transcript\glove.6B')
+    # glove_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\saliency_transcript\glove.6B')
+    glove_path = Path (r'glove.6B')
     glove_file = glove_path / f'glove.6B.{glove_emb_dim}d.txt'
     glove_words_file = glove_path / f'6B.{glove_emb_dim}_words.pkl'
     glove_idx_file = glove_path / f'6B.{glove_emb_dim}_idx.pkl'
