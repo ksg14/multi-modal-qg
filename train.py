@@ -175,8 +175,8 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 text_enc_optimizer.step ()
                 dec_optimizer.step()
 
-                with torch.no_grad():          
-                    epoch_stats ['train']['loss'] [-1] += (loss.item () / target_len) / n_len
+                with torch.no_grad():
+                    epoch_stats ['train']['loss'] [-1] += ((loss.item () / target_len) / n_len).item ()
                 
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 # break
