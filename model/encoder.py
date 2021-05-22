@@ -38,7 +38,7 @@ class TextEncoder (Module):
         self.embedding_dim = emb_dim
         self.word_embeddings = emb_layer 
 
-        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers, dropout=dropout)
+        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers)
 
         # self.out_layer = Linear(hidden_dim, output_dim)
 

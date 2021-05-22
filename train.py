@@ -1,3 +1,4 @@
+from numpy.lib.function_base import _quantile_dispatcher
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
 from torch.optim import Adam
@@ -18,8 +19,8 @@ from config import Config
 from utils.dataset import VQGDataset
 from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Normalize, prepare_sequence
 
-# import warnings
-# warnings.filterwarnings('ignore')
+import warnings
+warnings.filterwarnings('ignore')
 
 def create_emb_layer (weights_matrix, non_trainable):
     num_embeddings, embedding_dim = weights_matrix.size()
@@ -50,8 +51,8 @@ def repackage_hidden(h):
     else:
         return tuple(repackage_hidden(v) for v in h)
 
-def validate (av_enc_model, text_enc_model, dec_model, dataloader, max_len):
-    val_loss = 0.0
+def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len):
+    # val_loss = 0.0
     val_bleu = 0.0
     val_bleu_1 = 0.0
     val_bleu_2 = 0.0
@@ -64,45 +65,57 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, max_len):
     dec_model.eval ()
 
     with torch.no_grad ():
-        for _, (frames, audio_file, context_tensor, question, target, context_len, target_len) in enumerate (dataloader):
-            av_enc_out = av_enc_model (audio_file [0], frames)
+        with tqdm(dataloader) as tepoch:
+            for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
+                tepoch.set_description (f'Validating ...')
 
-            text_enc_hidden = text_enc_model.init_state (1)
+                av_enc_out = av_enc_model (audio_file [0], frames)
 
-            text_enc_out, text_enc_hidden = text_enc_model (context_tensor, text_enc_hidden)
+                text_enc_hidden = text_enc_model.init_state (1)
+                all_enc_outputs = torch.zeros(context_max_len, 128)
 
-            dec_hidden = text_enc_hidden
+                for ei in range (context_len):
+                    enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
+                    all_enc_outputs [ei] = enc_output [0, 0]
 
-            pred_words = ['<start>']
+                # loss = 0
+                dec_input = torch.tensor([[dataloader.dataset.vocab ['<start>']]])
+                dec_hidden = text_enc_hidden
 
-            for i in range(max_len):
-                x = prepare_sequence(pred_words [-1], dataloader.dataset.vocab)
+                pred_words = []
 
-                y_pred, dec_hidden = dec_model (x.view (1, -1), av_enc_out, dec_hidden)
-    
-                loss = criterion(y_pred[-1], target [0][-1].view (-1))
+                for di in range(pred_max_len):
+                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
+                    # loss += criterion (dec_output, target [0][di].view (-1))
+                    
+                    # Sampling
+                    # last_word_logits = y_pred[0][-1]
+                    # p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+                    # word_index = np.random.choice(len(last_word_logits), p=p)
+                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+                    
+                    # topk
+                    topv, topi = dec_output.data.topk(1)
+                    pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
 
-                val_loss += loss.item ()
+                    dec_input = topi.squeeze().detach()
 
-                last_word_logits = y_pred[0][-1]
+                    if pred_words [-1] == '<end>':
+                        del pred_words [-1]
+                        break
+                    # break
 
-                p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-                word_index = np.random.choice(len(last_word_logits), p=p)
+                # val_loss += (loss.item () / target_len)
                 
-                pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-
-                if pred_words [-1] == '<end>':
-                    break
-                # break
-            
-            val_bleu_1 += sentence_bleu (pred_words [1:], target [:-1], weights=(1, 0, 0, 0))
-            val_bleu_2 += sentence_bleu (pred_words [1:], target [:-1], weights=(0, 1, 0, 0))
-            val_bleu_3 += sentence_bleu (pred_words [1:], target [:-1], weights=(0, 0, 1, 0))
-            val_bleu_4 += sentence_bleu (pred_words [1:], target [:-1], weights=(0, 0, 0, 1))
-            val_bleu += sentence_bleu (pred_words [1:], target [:-1])
+                val_bleu_1 += sentence_bleu (pred_words, target [:-1], weights=(1, 0, 0, 0))
+                val_bleu_2 += sentence_bleu (pred_words, target [:-1], weights=(0, 1, 0, 0))
+                val_bleu_3 += sentence_bleu (pred_words, target [:-1], weights=(0, 0, 1, 0))
+                val_bleu_4 += sentence_bleu (pred_words, target [:-1], weights=(0, 0, 0, 1))
+                val_bleu += sentence_bleu (pred_words, target [:-1])
+                tepoch.set_postfix (val_bleu=val_bleu)
     
-    print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
-    return val_loss / n_len, val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
+    print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
+    return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
@@ -115,7 +128,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         text_enc_model.train ()
         dec_model.train ()
 
-        # for _, (frames, audio_file, context_tensor, question, target, context_len, target_len) in enumerate (train_dataloader):
         with tqdm(train_dataloader) as tepoch:
             for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
                 tepoch.set_description (f'Epoch {epoch}')
@@ -127,15 +139,16 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(pred_max_len, 128)
+                all_enc_outputs = torch.zeros(context_max_len, 128)
 
                 loss = 0
 
-                print (f'context_len - {context_len}')
-                print (f'target_len - {target_len}')
-                print (f'av enc out - {av_enc_out.shape}')
-                print (f'context shape - {context_tensor.shape}')
-                print (f'target shape - {target.shape}')
+                # print (f'av_enc_out shape - {av_enc_out.shape}')
+                # print (f'context_len - {context_len}')
+                # print (f'target_len - {target_len}')
+                # print (f'av enc out - {av_enc_out.shape}')
+                # print (f'context shape - {context_tensor.shape}')
+                # print (f'target shape - {target.shape}')
                 # print (f'context [0] - {context_tensor [0] [0]}')
 
                 for ei in range (context_len):
@@ -152,11 +165,9 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 # y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, dec_hidden, all_enc_outputs)
-                    loss += criterion (dec_output, target [di])
+                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
+                    loss += criterion (dec_output, target [0][di].view (-1))
                     dec_input = target [0] [di]  # Teacher forcing
-                
-                break
 
                 loss.backward()
 
@@ -168,10 +179,10 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                     epoch_stats ['train']['loss'] [-1] += (loss.item () / target_len) / n_len
                 
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
-                break
-        break
-        val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, pred_max_len)
-        epoch_stats ['val']['loss'].append (val_loss)
+                # break
+        # break
+        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, pred_max_len)
+        # epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
         epoch_stats ['val']['bleu_2'].append (val_bleu_2)
@@ -195,8 +206,9 @@ if __name__ == '__main__':
     config = Config ()
 
     av_emb = 128 + 400 # + 128
-    max_length = 20
-    
+    question_max_length = 21
+    context_max_lenth = 283
+
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
     weights_matrix = weights_matrix.long ()
     
@@ -234,16 +246,16 @@ if __name__ == '__main__':
                         word_emb_dim=emb_dim, \
                         av_emb_dim=av_emb, \
                         emb_layer=emb_layer, \
-                        max_length=20)
+                        max_length=context_max_lenth)
 
     criterion = CrossEntropyLoss()
     av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001)
     dec_optimizer = Adam(dec_model.parameters(), lr=0.001)
 
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, context_max_len=40, pred_max_len=15)
+    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, context_max_len=context_max_lenth, pred_max_len=question_max_length)
 
-    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, 15)
+    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length)
 
     try:
         with open (config.stats_json_path, 'w') as f:

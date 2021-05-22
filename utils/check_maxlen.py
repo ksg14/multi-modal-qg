@@ -31,6 +31,7 @@ if __name__ == '__main__':
         questions = json.load (file_io)
 
     print (f"Max/Avg len context - {get_maxlen_text (questions, 'context')}")
+    print (f"Max/Avg len question - {get_maxlen_text (questions, 'question')}")
     print (f"Max/Avg len frames - {get_maxlen_frames (frames_path)}")
 
 
