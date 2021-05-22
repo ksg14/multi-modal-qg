@@ -45,9 +45,14 @@ class TextEncoder (Module):
         self.initialise_weights ()
         
     def forward (self, text, hidden):
-        embeds = self.word_embeddings(text)
+        # print (f'text - {text.shape}')
+
+        embeds = self.word_embeddings(text.view (1, -1))
+        # print (f'emb - {embeds.shape}')
 
         lstm_out, hidden = self.lstm(embeds.view(embeds.shape [1], 1, -1), hidden)
+
+        print (lstm_out.max ().item ())
 
         return lstm_out, hidden
     

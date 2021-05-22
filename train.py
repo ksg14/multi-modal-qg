@@ -16,10 +16,10 @@ from model.decoder import AttnDecoder, Decoder
 
 from config import Config
 from utils.dataset import VQGDataset
-from utils.custom_transforms import prepare_sequence, PadCollate, Resize, ToFloatTensor, Normalize, prepare_sequence
+from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Normalize, prepare_sequence
 
-import warnings
-warnings.filterwarnings('ignore')
+# import warnings
+# warnings.filterwarnings('ignore')
 
 def create_emb_layer (weights_matrix, non_trainable):
     num_embeddings, embedding_dim = weights_matrix.size()
@@ -127,13 +127,23 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
-                enc_outputs = torch.zeros(pred_max_len, 128)
+                all_enc_outputs = torch.zeros(pred_max_len, 128)
 
                 loss = 0
 
+                print (f'context_len - {context_len}')
+                print (f'av enc out - {av_enc_out.shape}')
+                print (f'context shape - {context_tensor.shape}')
+                print (f'context [0] - {context_tensor [0] [0]}')
+
                 for ei in range (context_len):
-                    enc_output, text_enc_hidden = text_enc_model(context_tensor [ei], text_enc_hidden)
-                    enc_outputs [ei] = enc_outputs [0, 0]
+                    enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
+                    all_enc_outputs [ei] = enc_output [0, 0]
+                
+                # print (all_enc_outputs.shape)
+                # print (all_enc_outputs.max ().item ())
+                # print (all_enc_outputs.min ().item ())
+                break
 
                 dec_input = torch.tensor([['<start>']])
                 dec_hidden = text_enc_hidden
@@ -193,7 +203,7 @@ if __name__ == '__main__':
 
     train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
     val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
-    train_dataloader = DataLoader (train_dataset, batch_size=32, shuffle=False, collate_fn=PadCollate)
+    train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=False)
     val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=False)
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    

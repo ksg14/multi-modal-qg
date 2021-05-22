@@ -59,11 +59,11 @@ class AttnDecoder (Module):
         self.word_emb_dim = word_emb_dim
         self.emb_layer = emb_layer
 
-        self.attn = Linear (self.emb_dim + self.hidden_dim, self.max_length)
-        self.attn_combine = Linear (self.hidden_size * 2, self.hidden_size)
+        self.attn = Linear (self.word_emb_dim + self.hidden_dim, self.max_length)
+        self.attn_combine = Linear (self.hidden_dim * 2, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
-        self.gru = GRU (self.hidden_size, self.hidden_size)
-        self.out = Linear (self.hidden_size, self.output_size)
+        self.gru = LSTM (self.hidden_dim, self.hidden_dim)
+        self.out = Linear (self.hidden_dim, self.n_vocab)
 
     def forward(self, word, enc_seq_len, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
