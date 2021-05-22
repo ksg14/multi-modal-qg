@@ -8,7 +8,8 @@ def save_audio (save_path, video_id, video_path):
         # command = f"ffmpeg -hide_banner -loglevel panic -i {video_path}/{video_id}.mp4 -ab 160k -ac 2 -ar 44100 -vn {save_path}/{video_id}.wav"
         command = f"ffmpeg -i {video_path}/{video_id}.mp4 -ab 160k -ac 2 -ar 44100 -vn {save_path}/{video_id}.wav"
         subprocess.call(command, shell=False)
-    except: 
+    except Exception as e:
+        print (f'Error {str (e)}') 
         return 1
     return 0
 
