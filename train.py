@@ -117,7 +117,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0.0
@@ -130,6 +130,8 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
         with tqdm(train_dataloader) as tepoch:
             for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
+                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question.to (device), target.to (device), context_len.to (device), target_len.to (device)
+                
                 tepoch.set_description (f'Epoch {epoch}')
 
                 av_enc_optimizer.zero_grad()
@@ -138,8 +140,8 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
-                text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, 128)
+                text_enc_hidden = text_enc_model.init_state (1).to (device)
+                all_enc_outputs = torch.zeros(context_max_len, 128).to (device)
 
                 loss = 0
 
@@ -159,7 +161,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 # print (all_enc_outputs.max ().item ())
                 # print (all_enc_outputs.min ().item ())
 
-                dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]])
+                dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]]).to (device)
                 dec_hidden = text_enc_hidden
 
                 # y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
@@ -205,6 +207,9 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 if __name__ == '__main__':
     config = Config ()
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f'Device - {device}')
+
     av_emb = 128 + 400 # + 128
     question_max_length = 21
     context_max_lenth = 283
@@ -249,11 +254,16 @@ if __name__ == '__main__':
                         max_length=context_max_lenth)
 
     criterion = CrossEntropyLoss()
-    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
-    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001)
-    dec_optimizer = Adam(dec_model.parameters(), lr=0.001)
+    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001).to (device)
+    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001).to (device)
+    dec_optimizer = Adam(dec_model.parameters(), lr=0.001).to (device)
 
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, context_max_len=context_max_lenth, pred_max_len=question_max_length)
+    av_enc_model.to (device)
+    text_enc_model.to (device)
+    dec_model.to (device)
+
+
+    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=context_max_lenth, pred_max_len=question_max_length)
 
     # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length)
 
