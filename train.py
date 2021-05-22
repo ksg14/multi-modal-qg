@@ -104,7 +104,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, max_len):
     print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
     return val_loss / n_len, val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, pred_max_len):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0.0
@@ -132,9 +132,11 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 loss = 0
 
                 print (f'context_len - {context_len}')
+                print (f'target_len - {target_len}')
                 print (f'av enc out - {av_enc_out.shape}')
                 print (f'context shape - {context_tensor.shape}')
-                print (f'context [0] - {context_tensor [0] [0]}')
+                print (f'target shape - {target.shape}')
+                # print (f'context [0] - {context_tensor [0] [0]}')
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
@@ -143,17 +145,18 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 # print (all_enc_outputs.shape)
                 # print (all_enc_outputs.max ().item ())
                 # print (all_enc_outputs.min ().item ())
-                break
 
-                dec_input = torch.tensor([['<start>']])
+                dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]])
                 dec_hidden = text_enc_hidden
 
                 # y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, dec_hidden, enc_outputs)
+                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, dec_hidden, all_enc_outputs)
                     loss += criterion (dec_output, target [di])
-                    dec_input = target [di]  # Teacher forcing
+                    dec_input = target [0] [di]  # Teacher forcing
+                
+                break
 
                 loss.backward()
 
@@ -238,7 +241,7 @@ if __name__ == '__main__':
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001)
     dec_optimizer = Adam(dec_model.parameters(), lr=0.001)
 
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, pred_max_len=15)
+    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, context_max_len=40, pred_max_len=15)
 
     # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, 15)
 

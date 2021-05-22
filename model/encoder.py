@@ -52,8 +52,6 @@ class TextEncoder (Module):
 
         lstm_out, hidden = self.lstm(embeds.view(embeds.shape [1], 1, -1), hidden)
 
-        print (lstm_out.max ().item ())
-
         return lstm_out, hidden
     
     def initialise_weights (self):

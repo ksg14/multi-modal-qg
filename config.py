@@ -66,12 +66,12 @@ class Config():
     vid_std = [0.22803, 0.22145, 0.216989]
     # text encoder
     text_lstm_hidden_dim = 128
-    text_lstm_layers = 2
+    text_lstm_layers = 1
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 128
-    dec_lstm_layers = 2
+    dec_lstm_layers = 1
     dec_lstm_dropout = 0.2
     
     # checkpoints

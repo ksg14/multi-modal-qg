@@ -71,10 +71,11 @@ class AttnDecoder (Module):
         print (embedded.shape)
         print (hidden [0].shape)
 
-        att_pre_soft = self.attn(torch.cat((embedded[0], hidden[0]), 1))
+        att_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [0]), 1))
 
         print (att_pre_soft.shape)
 
+        
 
         # attn_weights = F.softmax(
         #     self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
@@ -89,7 +90,7 @@ class AttnDecoder (Module):
 
         # output = F.log_softmax(self.out(output[0]), dim=1)
         # return output, hidden, attn_weights
-        return
+        return None, None, None
     
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size)
