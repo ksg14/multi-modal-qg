@@ -108,16 +108,15 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     # break
 
                 # val_loss += (loss.item () / target_len)
-                
-                print (question)
-                val_bleu_1 += sentence_bleu (pred_words, question [0], weights=(1, 0, 0, 0))
-                val_bleu_2 += sentence_bleu (pred_words, question [0], weights=(0.5, 0.5, 0, 0))
-                val_bleu_3 += sentence_bleu (pred_words, question [0], weights=(0.33, 0.33, 0.33, 0))
-                val_bleu_4 += sentence_bleu (pred_words, question [0])
-                val_bleu += sentence_bleu (pred_words, question [0])
+                question_str_list = question [0].split ()
+                val_bleu_1 += sentence_bleu (pred_words, question_str_list, weights=(1, 0, 0, 0))
+                val_bleu_2 += sentence_bleu (pred_words, question_str_list, weights=(0.5, 0.5, 0, 0))
+                val_bleu_3 += sentence_bleu (pred_words, question_str_list, weights=(0.33, 0.33, 0.33, 0))
+                val_bleu_4 += sentence_bleu (pred_words, question_str_list)
+                val_bleu += sentence_bleu (pred_words, question_str_list)
                 tepoch.set_postfix (val_bleu=val_bleu)
     
-    print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
+    print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
