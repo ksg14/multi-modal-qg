@@ -183,7 +183,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 # break
         # break
-        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, pred_max_len)
+        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, pred_max_len)
         # epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
