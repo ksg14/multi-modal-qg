@@ -43,8 +43,8 @@ class VQGDataset (Dataset):
         audio_file = os.path.join (self.audio_path, f'v_{video_id}_q_{question_id}_.wav')
 
         # Target Question
-        if self.text_transform:
-            question = self.text_transform (f"{question_str}", self.vocab)
+        # if self.text_transform:
+        #     question = self.text_transform (f"{question_str}", self.vocab)
         
         if self.text_transform:
             target = self.text_transform (f"{question_str} <end>", self.vocab)
@@ -52,7 +52,7 @@ class VQGDataset (Dataset):
         context_seq_len = context_tensor.shape [0]
         target_seq_len = target.shape [0]
         
-        return frames, audio_file, context_tensor, question, target, context_seq_len, target_seq_len
+        return frames, audio_file, context_tensor, question_str, target, context_seq_len, target_seq_len
 
 # if __name__ == '__main__':
 #     train_dataset = VQGDataset (config.train_file, vocab_file, config.salient_frames_path, config.salient_audio_path, prepare_sequence)

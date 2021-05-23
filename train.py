@@ -109,6 +109,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                 # val_loss += (loss.item () / target_len)
                 
+                print (question)
                 val_bleu_1 += sentence_bleu (pred_words, target [:-1], weights=(1, 0, 0, 0))
                 val_bleu_2 += sentence_bleu (pred_words, target [:-1], weights=(0, 1, 0, 0))
                 val_bleu_3 += sentence_bleu (pred_words, target [:-1], weights=(0, 0, 1, 0))
@@ -267,9 +268,9 @@ if __name__ == '__main__':
     dec_model.to (device)
 
 
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=context_max_lenth, pred_max_len=question_max_length)
+    # epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=context_max_lenth, pred_max_len=question_max_length)
 
-    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length)
+    validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length)
 
     try:
         with open (config.stats_json_path, 'w') as f:
