@@ -51,7 +51,7 @@ def repackage_hidden(h):
     else:
         return tuple(repackage_hidden(v) for v in h)
 
-def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len):
+def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, device):
     # val_loss = 0.0
     val_bleu = 0.0
     val_bleu_1 = 0.0
@@ -74,14 +74,14 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, 128)
+                all_enc_outputs = torch.zeros(context_max_len, 128).to (device)
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
 
                 # loss = 0
-                dec_input = torch.tensor([[dataloader.dataset.vocab ['<start>']]])
+                dec_input = torch.tensor([[dataloader.dataset.vocab ['<start>']]]).to (device)
                 dec_hidden = text_enc_hidden
 
                 pred_words = []
@@ -185,7 +185,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 # break
         # break
-        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, pred_max_len)
+        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, pred_max_len, device)
         # epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
