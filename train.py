@@ -254,9 +254,9 @@ if __name__ == '__main__':
                         max_length=context_max_lenth)
 
     criterion = CrossEntropyLoss()
-    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001).to (device)
-    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001).to (device)
-    dec_optimizer = Adam(dec_model.parameters(), lr=0.001).to (device)
+    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
+    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001)
+    dec_optimizer = Adam(dec_model.parameters(), lr=0.001)
 
     av_enc_model.to (device)
     text_enc_model.to (device)
