@@ -49,7 +49,7 @@ class Decoder (Module):
         normal_ (self.out_layer.bias)
 
 class AttnDecoder (Module):
-    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, max_length):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, max_length, device):
         super(AttnDecoder, self).__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
@@ -59,6 +59,7 @@ class AttnDecoder (Module):
         self.av_emb_dim = av_emb_dim
         self.word_emb_dim = word_emb_dim
         self.emb_layer = emb_layer
+        self.device = device
 
         self.attn = Linear (self.word_emb_dim + self.hidden_dim, self.max_length)
         self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
