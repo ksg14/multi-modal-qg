@@ -234,7 +234,8 @@ if __name__ == '__main__':
                         dropout=config.text_lstm_dropout, \
                         hidden_dim=config.text_lstm_hidden_dim, \
                         emb_dim=emb_dim, \
-                        emb_layer=emb_layer)
+                        emb_layer=emb_layer, \
+                        device=device)
     
     # dec_model = Decoder (num_layers=config.dec_lstm_layers, \
     #                     dropout=config.dec_lstm_dropout, \
@@ -251,7 +252,8 @@ if __name__ == '__main__':
                         word_emb_dim=emb_dim, \
                         av_emb_dim=av_emb, \
                         emb_layer=emb_layer, \
-                        max_length=context_max_lenth)
+                        max_length=context_max_lenth, \
+                        device=device)
 
     criterion = CrossEntropyLoss()
     av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
