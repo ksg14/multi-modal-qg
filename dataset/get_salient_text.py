@@ -110,7 +110,7 @@ if __name__ == '__main__':
         if salient_obj:
             salient_text_list.append (salient_obj)
 
-    with open (f'{save_path}\{output_file_name}', 'w') as file_io:
+    with open (f'{save_path}/{output_file_name}', 'w') as file_io:
         json.dump (salient_text_list, file_io)
 
     print ('Done!')
