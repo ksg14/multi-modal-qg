@@ -109,11 +109,11 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                 # val_loss += (loss.item () / target_len)
                 question_str_list = question [0].split ()
-                val_bleu_1 += sentence_bleu (pred_words, question_str_list, weights=(1, 0, 0, 0))
-                val_bleu_2 += sentence_bleu (pred_words, question_str_list, weights=(0.5, 0.5, 0, 0))
-                val_bleu_3 += sentence_bleu (pred_words, question_str_list, weights=(0.33, 0.33, 0.33, 0))
-                val_bleu_4 += sentence_bleu (pred_words, question_str_list)
-                val_bleu += sentence_bleu (pred_words, question_str_list)
+                val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
+                val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
+                val_bleu_3 += sentence_bleu (question_str_list, pred_words, weights=(0.33, 0.33, 0.33, 0))
+                val_bleu_4 += sentence_bleu (question_str_list, pred_words)
+                val_bleu += sentence_bleu (question_str_list, pred_words)
                 tepoch.set_postfix (val_bleu=val_bleu)
     
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
