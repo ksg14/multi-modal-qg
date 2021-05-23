@@ -100,7 +100,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     topv, topi = dec_output.data.topk(1)
                     pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
 
-                    dec_input = topi.squeeze().detach()
+                    dec_input = topi.squeeze().detach().to (device)
 
                     if pred_words [-1] == '<end>':
                         del pred_words [-1]
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     context_max_lenth = 283
 
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
-    weights_matrix = weights_matrix.long ()
+    weights_matrix = weights_matrix.long ().to (device)
     
     mean = [0.43216, 0.394666, 0.37645]
     std = [0.22803, 0.22145, 0.216989]
