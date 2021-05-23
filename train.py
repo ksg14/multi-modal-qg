@@ -67,7 +67,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     with torch.no_grad ():
         with tqdm(dataloader) as tepoch:
             for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
-                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question.to (device), target.to (device), context_len.to (device), target_len.to (device)
+                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
                 
                 tepoch.set_description (f'Validating ...')
 
@@ -110,11 +110,11 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                 # val_loss += (loss.item () / target_len)
                 
                 print (question)
-                val_bleu_1 += sentence_bleu (pred_words, target [:-1], weights=(1, 0, 0, 0))
-                val_bleu_2 += sentence_bleu (pred_words, target [:-1], weights=(0, 1, 0, 0))
-                val_bleu_3 += sentence_bleu (pred_words, target [:-1], weights=(0, 0, 1, 0))
-                val_bleu_4 += sentence_bleu (pred_words, target [:-1], weights=(0, 0, 0, 1))
-                val_bleu += sentence_bleu (pred_words, target [:-1])
+                val_bleu_1 += sentence_bleu (pred_words, question [0], weights=(1, 0, 0, 0))
+                val_bleu_2 += sentence_bleu (pred_words, question [0], weights=(0.5, 0.5, 0, 0))
+                val_bleu_3 += sentence_bleu (pred_words, question [0], weights=(0.33, 0.33, 0.33, 0))
+                val_bleu_4 += sentence_bleu (pred_words, question [0])
+                val_bleu += sentence_bleu (pred_words, question [0])
                 tepoch.set_postfix (val_bleu=val_bleu)
     
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 {round (val_bleu_1, 3)}')
@@ -133,7 +133,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
         with tqdm(train_dataloader) as tepoch:
             for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
-                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question.to (device), target.to (device), context_len.to (device), target_len.to (device)
+                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
