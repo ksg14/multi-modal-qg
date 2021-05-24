@@ -129,7 +129,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
-    best_bleu = 0.0
+    best_bleu = -1
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
