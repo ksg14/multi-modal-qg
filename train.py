@@ -192,7 +192,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 # break
         # break
-        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, pred_max_len, device)
+        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_len, pred_max_len, device)
         # epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
@@ -241,14 +241,6 @@ if __name__ == '__main__':
                         emb_dim=emb_dim, \
                         emb_layer=emb_layer, \
                         device=device)
-    
-    # dec_model = Decoder (num_layers=config.dec_lstm_layers, \
-    #                     dropout=config.dec_lstm_dropout, \
-    #                     hidden_dim=config.dec_lstm_hidden_dim, \
-    #                     n_vocab=n_vocab, \
-    #                     word_emb_dim=emb_dim, \
-    #                     av_emb_dim=av_emb, \
-    #                     emb_layer=emb_layer)
     
     dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
                         dropout_p=config.dec_lstm_dropout, \
