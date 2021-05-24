@@ -1,4 +1,3 @@
-from numpy.lib.function_base import _quantile_dispatcher
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
 from torch.optim import Adam
@@ -81,7 +80,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, 128).to (device)
+                all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
