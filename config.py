@@ -22,6 +22,7 @@ class Config():
     dec_model_path = output_path / 'dec_model.pth'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
+    predictions_json_path = output_path / 'predictions.json'
 
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')

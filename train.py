@@ -66,8 +66,8 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
     with torch.no_grad ():
         with tqdm(dataloader) as tepoch:
-            for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
-                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
+            for frames, audio_file, context_tensor, question_id, question, target, context_len, target_len in tepoch:
+                frames, audio_file, context_tensor, question_id, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question_id, question, target.to (device), context_len.to (device), target_len.to (device)
                 
                 tepoch.set_description (f'Validating ...')
 
@@ -131,8 +131,8 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         dec_model.train ()
 
         with tqdm(train_dataloader) as tepoch:
-            for frames, audio_file, context_tensor, question, target, context_len, target_len in tepoch:
-                frames, audio_file, context_tensor, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
+            for frames, audio_file, context_tensor, question_id, question, target, context_len, target_len in tepoch:
+                frames, audio_file, context_tensor, question_id, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question_id, question, target.to (device), context_len.to (device), target_len.to (device)
                 
                 tepoch.set_description (f'Epoch {epoch}')
 

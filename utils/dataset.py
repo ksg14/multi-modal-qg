@@ -52,7 +52,7 @@ class VQGDataset (Dataset):
         context_seq_len = context_tensor.shape [0]
         target_seq_len = target.shape [0]
         
-        return frames, audio_file, context_tensor, question_str, target, context_seq_len, target_seq_len
+        return frames, audio_file, context_tensor, question_id, question_str, target, context_seq_len, target_seq_len
 
 # if __name__ == '__main__':
 #     train_dataset = VQGDataset (config.train_file, vocab_file, config.salient_frames_path, config.salient_audio_path, prepare_sequence)
