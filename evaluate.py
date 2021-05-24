@@ -94,7 +94,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				
 				predictions.append ({
 					'question_id' : question_id [0].item (),
-					'gt_question' : question [0].item (),
+					'gt_question' : question [0],
 					'pred_question' : ' '.join (pred_words)
 				})
 
