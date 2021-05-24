@@ -108,7 +108,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                     # Sampling
                     last_word_logits = dec_output [-1]
-                    softmax_p = F.softmax(last_word_logits, dim=0).detach().numpy()
+                    softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
                     word_index = np.random.choice(len(last_word_logits), p=softmax_p)
                     pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
                     dec_input = torch.tensor ([[word_index]]).to (device)
