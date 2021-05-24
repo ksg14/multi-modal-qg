@@ -29,8 +29,6 @@ class Decoder (Module):
 
         lstm_out, hidden = self.lstm(word_av_emb.view(word_av_emb.shape [0], 1, -1), hidden)
 
-        # print (f'lstm out - {lstm_out.shape}')
-
         logits = self.out_layer (lstm_out)
         return logits, hidden
     
@@ -71,34 +69,18 @@ class AttnDecoder (Module):
 
     def forward(self, word, enc_seq_len, av_emb, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
-        # embedded = self.dropout(embedded)
-        # print (f'emb shape - {embedded.shape}')
-        # print (f'hidden shape - {hidden [0].shape}')
 
         attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [0]), 1))
-        # attn_pre_soft [0][enc_seq_len : ] = float ('-inf')
-
-        # print (f'attn pre soft shape - {attn_pre_soft.shape}')
-        # print (attn_pre_soft)
 
         attn_weights = F.softmax(attn_pre_soft, dim=1)
 
-        # print (f'attn w - {attn_weights.shape}')
-        # print (f'attn w - {attn_weights.unsqueeze(0).shape}')
-
         attn_applied = torch.bmm(attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
-
-        # print (f'attn_applied - {attn_applied.shape}')
 
         output = torch.cat((embedded[0], attn_applied[0], av_emb), 1)
         output = self.attn_combine(output).unsqueeze(0)
 
-        # print (f'output shape - {output.shape}')
-
         output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
-
-        # print (f'lstm output - {output.shape}')
 
         output = self.out_layer(output[0])
         return output, hidden, attn_weights

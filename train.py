@@ -154,26 +154,14 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 loss = 0
 
-                # print (f'av_enc_out shape - {av_enc_out.shape}')
-                # print (f'context_len - {context_len}')
-                # print (f'target_len - {target_len}')
-                # print (f'av enc out - {av_enc_out.shape}')
-                # print (f'context shape - {context_tensor.shape}')
-                # print (f'target shape - {target.shape}')
-                # print (f'context [0] - {context_tensor [0] [0]}')
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
                 
-                # print (all_enc_outputs.shape)
-                # print (all_enc_outputs.max ().item ())
-                # print (all_enc_outputs.min ().item ())
 
                 dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]]).to (device)
                 dec_hidden = text_enc_hidden
-
-                # y_pred, dec_hidden = dec_model (question, av_enc_out, dec_hidden)
 
                 for di in range (target_len):
                     dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
@@ -217,7 +205,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 if __name__ == '__main__':
     config = Config ()
 
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f'Device - {device}')
 
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))

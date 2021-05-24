@@ -42,16 +42,11 @@ class TextEncoder (Module):
 
         self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers)
 
-        # self.out_layer = Linear(hidden_dim, output_dim)
-
         self.initialise_weights ()
         
     def forward (self, text, hidden):
-        # print (f'text - {text.shape}')
-
         embeds = self.word_embeddings(text.view (1, -1))
-        # print (f'emb - {embeds.shape}')
-
+        
         lstm_out, hidden = self.lstm(embeds.view(embeds.shape [1], 1, -1), hidden)
 
         return lstm_out, hidden
@@ -62,15 +57,7 @@ class TextEncoder (Module):
                 orthogonal_(param.data)
             else:
                 normal_(param.data)
-        
-        # xavier_uniform_ (self.out_layer.weight)
-        # normal_ (self.out_layer.bias)
-
-    # def init_hidden(self, batch_sz):
-    #     weight = next(self.parameters())
-    #     return (weight.new_zeros(self.num_layers, batch_sz, self.hidden_dim),
-    #             weight.new_zeros(self.num_layers, batch_sz, self.hidden_dim))
-    
+            
     def init_state(self, batch_sz):
         return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
