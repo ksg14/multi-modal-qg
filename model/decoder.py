@@ -76,7 +76,7 @@ class AttnDecoder (Module):
         # print (f'hidden shape - {hidden [0].shape}')
 
         attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [0]), 1))
-        attn_pre_soft [0][enc_seq_len : ] = float ('-inf')
+        # attn_pre_soft [0][enc_seq_len : ] = float ('-inf')
 
         # print (f'attn pre soft shape - {attn_pre_soft.shape}')
         # print (attn_pre_soft)

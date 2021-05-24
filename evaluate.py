@@ -22,6 +22,14 @@ from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Nor
 import warnings
 warnings.filterwarnings('ignore')
 
+def create_emb_layer (weights_matrix, non_trainable):
+	num_embeddings, embedding_dim = weights_matrix.size()
+	emb_layer = Embedding(num_embeddings, embedding_dim)
+	emb_layer.load_state_dict({'weight': weights_matrix})
+	if non_trainable:
+		emb_layer.weight.requires_grad = False
+	return emb_layer, num_embeddings, embedding_dim
+
 def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, device):
 	# val_loss = 0.0
 	val_bleu = 0.0
@@ -30,10 +38,6 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 	val_bleu_3 = 0.0
 	val_bleu_4 = 0.0
 	n_len = len (dataloader)
-
-	av_enc_model.eval () 
-	text_enc_model.eval ()
-	dec_model.eval ()
 
 	predictions = []
 
@@ -119,11 +123,32 @@ if __name__ == '__main__':
 	test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
 	test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
 
-	# emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)	
+	weights_matrix = torch.load (config.learned_weight_path)
+	emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-	av_enc_model = torch.load (config.av_model_path)
-	text_enc_model = torch.load (config.text_enc_model_path)
-	dec_model = torch.load (config.dec_model_path)
+	av_enc_model = AudioVideoEncoder ()
+	av_enc_model.eval ()
+
+	text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
+									dropout=config.text_lstm_dropout, \
+									hidden_dim=config.text_lstm_hidden_dim, \
+									emb_dim=emb_dim, \
+									emb_layer=emb_layer, \
+									device=device)
+	text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
+	text_enc_model.eval()
+
+	dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
+								dropout_p=config.dec_lstm_dropout, \
+								hidden_dim=config.dec_lstm_hidden_dim, \
+								n_vocab=n_vocab, \
+								word_emb_dim=emb_dim, \
+								av_emb_dim=av_emb, \
+								emb_layer=emb_layer, \
+								max_length=context_max_lenth, \
+								device=device)
+	dec_model.load_state_dict(torch.load(config.dec_model_path))
+	dec_model.eval ()
 
 	av_enc_model.to (device)
 	text_enc_model.to (device)

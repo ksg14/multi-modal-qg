@@ -30,9 +30,17 @@ def create_emb_layer (weights_matrix, non_trainable):
         emb_layer.weight.requires_grad = False
     return emb_layer, num_embeddings, embedding_dim
 
+def save_weights (emb_layer, weight_path):
+    try:
+        torch.save(emb_layer.weight, weight_path)
+        print (f'Emb Weights saved to {weight_path}')
+    except Exception:
+        print (f'unable to save weights {str (Exception)}')
+    return
+
 def save_model (model, model_path):
     try:
-        torch.save(model, model_path)
+        torch.save(model.state_dict(), model_path)
         print (f'Model saved to {model_path}')
     except Exception:
         print (f'unable to save model {str (Exception)}')
@@ -45,7 +53,6 @@ def get_mem_usage (model):
     return mem_usage
 
 def repackage_hidden(h):
-    """Wraps hidden states in new Tensors, to detach them from their history."""
     if isinstance(h, torch.Tensor):
         return h.detach()
     else:
@@ -119,14 +126,14 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0.0
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
-        av_enc_model.train ()
+        # av_enc_model.train ()
         text_enc_model.train ()
         dec_model.train ()
 
@@ -136,7 +143,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
-                av_enc_optimizer.zero_grad()
+                # av_enc_optimizer.zero_grad()
                 text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
@@ -175,7 +182,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 loss.backward()
 
-                av_enc_optimizer.step()
+                # av_enc_optimizer.step()
                 text_enc_optimizer.step ()
                 dec_optimizer.step()
 
@@ -198,9 +205,10 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
             best_bleu = val_bleu
 
             print ('Saving new best model !')
-            save_model (av_enc_model, config.av_model_path)
+            # save_model (av_enc_model, config.av_model_path)
             save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
+            save_weights (dec_model.emb_layer, config.learned_weight_path)
 
         print({ 'epoch': epoch, 'train_loss': epoch_stats ['train']['loss'] [-1] })
         # break
@@ -212,16 +220,10 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f'Device - {device}')
 
-    av_emb = 128 + 400 # + 128
-    question_max_length = 21
-    context_max_lenth = 283
-
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
     weights_matrix = weights_matrix.long ().to (device)
     
-    mean = [0.43216, 0.394666, 0.37645]
-    std = [0.22803, 0.22145, 0.216989]
-    video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (mean, std)])
+    video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (config.vid_mean, config.vid_std)])
 
     train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
     val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
@@ -231,6 +233,7 @@ if __name__ == '__main__':
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
     av_enc_model = AudioVideoEncoder ()
+    av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
                         dropout=config.text_lstm_dropout, \
@@ -252,22 +255,21 @@ if __name__ == '__main__':
                         hidden_dim=config.dec_lstm_hidden_dim, \
                         n_vocab=n_vocab, \
                         word_emb_dim=emb_dim, \
-                        av_emb_dim=av_emb, \
+                        av_emb_dim=config.av_emb, \
                         emb_layer=emb_layer, \
-                        max_length=context_max_lenth, \
+                        max_length=config.context_max_lenth, \
                         device=device)
 
     criterion = CrossEntropyLoss()
-    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
-    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=0.001)
-    dec_optimizer = Adam(dec_model.parameters(), lr=0.001)
+    # av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
+    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
+    dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
     av_enc_model.to (device)
     text_enc_model.to (device)
     dec_model.to (device)
 
-
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=context_max_lenth, pred_max_len=question_max_length)
+    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
 
     # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length, device)
 

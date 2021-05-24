@@ -16,13 +16,14 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-1/')
+    output_path = Path (r'results/exp-2/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
     predictions_json_path = output_path / 'predictions.json'
+    learned_weight_path = output_path / 'learned_weight.pt'
 
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
@@ -50,7 +51,7 @@ class Config():
     test_file = data_path / 'test_questions.json'
 
     # glove
-    glove_emb_dim = 50
+    glove_emb_dim = 300
     # glove_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\saliency_transcript\glove.6B')
     glove_path = Path (r'glove.6B')
     glove_file = glove_path / f'glove.6B.{glove_emb_dim}d.txt'
@@ -59,20 +60,22 @@ class Config():
     glove_matrix_file = glove_path / f'6B.{glove_emb_dim}_matrix.npy'
 
     # hyper-params
-    epochs = 50
-    lr = 0.001
+    epochs = 60
+    lr = 0.01
     optim='adam' # sgd, adam
     audio_emb = 128
     av_emb = 128 + 400
     vid_mean = [0.43216, 0.394666, 0.37645]
     vid_std = [0.22803, 0.22145, 0.216989]
+    question_max_length = 21
+    context_max_lenth = 283
     # text encoder
-    text_lstm_hidden_dim = 128
+    text_lstm_hidden_dim = 512
     text_lstm_layers = 1
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
-    dec_lstm_hidden_dim = 128
+    dec_lstm_hidden_dim = 512
     dec_lstm_layers = 1
     dec_lstm_dropout = 0.2
     
