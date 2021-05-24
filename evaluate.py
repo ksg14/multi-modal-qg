@@ -93,8 +93,8 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				val_bleu += sentence_bleu (question_str_list, pred_words)
 				
 				predictions.append ({
-					'question_id' : question_id [0],
-					'gt_question' : question [0],
+					'question_id' : question_id [0].item (),
+					'gt_question' : question [0].item (),
 					'pred_question' : ' '.join (pred_words)
 				})
 
