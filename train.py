@@ -93,7 +93,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                 pred_words = []
 
-                for di in range(pred_max_len):
+                for di in range(target_len):
                     dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
                     # loss += criterion (dec_output, target [0][di].view (-1))
 
@@ -122,9 +122,9 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     # dec_input = topi.squeeze().detach().to (device)
                     # dec_input = word_index.detach().to (device)
 
-                    if pred_words [-1] == '<end>':
-                        del pred_words [-1]
-                        break
+                    # if pred_words [-1] == '<end>':
+                    #     del pred_words [-1]
+                    #     break
                     # break
 
                 # val_loss += (loss.item () / target_len)

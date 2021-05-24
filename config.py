@@ -61,7 +61,7 @@ class Config():
 
     # hyper-params
     epochs = 100
-    lr = 0.01
+    lr = 1e-05
     optim='adam' # sgd, adam
     audio_emb = 128
     av_emb = 128 + 400
