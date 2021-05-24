@@ -188,8 +188,8 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         epoch_stats ['val']['bleu_4'].append (val_bleu_4)
 
         # Save best model
-        if val_bleu > best_bleu:
-            best_bleu = val_bleu
+        if val_bleu_1 > best_bleu:
+            best_bleu = val_bleu_1
 
             print ('Saving new best model !')
             # save_model (av_enc_model, config.av_model_path)
