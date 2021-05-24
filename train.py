@@ -142,7 +142,8 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
-    best_bleu = -1
+    best_bleu = 0
+    best_epoch = -1
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
@@ -203,16 +204,25 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         # Save best model
         if val_bleu_1 > best_bleu:
             best_bleu = val_bleu_1
+            best_epoch = epoch
 
             print ('Saving new best model !')
             # save_model (av_enc_model, config.av_model_path)
             save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
             save_weights (dec_model.emb_layer, config.learned_weight_path)
+        
+        # Save last epoch model
+        if epoch == n_epochs-1:
+            print ('Saving last epoch model !')
+            # save_model (av_enc_model, config.av_model_path)
+            save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
+            save_model (dec_model, config.output_path / 'last_decoder.pth')
+            save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pth')
 
         print({ 'epoch': epoch, 'train_loss': epoch_stats ['train']['loss'] [-1] })
         # break
-    return epoch_stats
+    return epoch_stats, best_epoch
 
 if __name__ == '__main__':
     config = Config ()
@@ -261,22 +271,24 @@ if __name__ == '__main__':
     text_enc_model.to (device)
     dec_model.to (device)
 
-    # epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
+    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
 
-    validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
+    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
 
-    # try:
-    #     with open (config.stats_json_path, 'w') as f:
-    #         json.dump (epoch_stats, f)
-    #         print (f'Stats saved to {config.stats_json_path}')
-    # except Exception:
-    #     pickle.dump(epoch_stats, open(config.stats_pkl_path, 'wb'))
-    #     print (f'Stats saved to {config.stats_pkl_path}')
+    print (f'Best epoch - {best_epoch} !')
+
+    try:
+        with open (config.stats_json_path, 'w') as f:
+            json.dump (epoch_stats, f)
+            print (f'Stats saved to {config.stats_json_path}')
+    except Exception:
+        pickle.dump(epoch_stats, open(config.stats_pkl_path, 'wb'))
+        print (f'Stats saved to {config.stats_pkl_path}')
     
-    # try:
-    #     config.save_config ()
-    # except Exception:
-    #     print (f'Unable to save config {str (Exception)}')
+    try:
+        config.save_config ()
+    except Exception:
+        print (f'Unable to save config {str (Exception)}')
     
     
     print ('Done !')
