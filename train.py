@@ -150,7 +150,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, 128).to (device)
+                all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
 
                 loss = 0
 
