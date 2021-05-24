@@ -71,6 +71,7 @@ class AttnDecoder (Module):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
         attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [0]), 1))
+        attn_pre_soft [enc_seq_len:] = float ('-inf')
 
         attn_weights = F.softmax(attn_pre_soft, dim=1)
 
