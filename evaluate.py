@@ -1,6 +1,7 @@
 from numpy.lib.function_base import _quantile_dispatcher
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
+from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
@@ -67,17 +68,30 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 					dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
 					# loss += criterion (dec_output, target [0][di].view (-1))
 					
-					# Sampling
-					# last_word_logits = y_pred[0][-1]
-					# p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-					# word_index = np.random.choice(len(last_word_logits), p=p)
-					# pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-					
-					# topk
-					topv, topi = dec_output.data.topk(1)
-					pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
+					# Greedy
+					last_word_logits = dec_output   
+					softmax_p = F.softmax(last_word_logits, dim=1).detach()
+					word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
+					pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
+					dec_input = word_index.detach ()
+					# print (f'decoder shape - {dec_input.shape}')
+					# print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
-					dec_input = topi.squeeze().detach().to (device)
+					# Sampling
+					# last_word_logits = dec_output [-1]
+					# softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
+					# word_index = np.random.choice(len(last_word_logits), p=softmax_p)
+					# pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+					# dec_input = torch.tensor ([[word_index]]).to (device)
+					# print (f'decoder shape - {dec_input.shape}')
+					# print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
+
+					# topk
+					# topv, topi = dec_output.data.topk(1)
+					# pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
+
+					# dec_input = topi.squeeze().detach().to (device)
+					# dec_input = word_index.detach().to (device)
 
 					if pred_words [-1] == '<end>':
 						del pred_words [-1]

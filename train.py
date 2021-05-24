@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
-import torch.nn.functional as F
+from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
@@ -98,22 +98,22 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     # loss += criterion (dec_output, target [0][di].view (-1))
 
                     # Greedy
-                    # last_word_logits = dec_output   
-                    # softmax_p = F.softmax(last_word_logits, dim=1).detach()
-                    # word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
-                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
-                    # dec_input = word_index.detach ()
+                    last_word_logits = dec_output   
+                    softmax_p = F.softmax(last_word_logits, dim=1).detach()
+                    word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
+                    pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
+                    dec_input = word_index.detach ()
                     # print (f'decoder shape - {dec_input.shape}')
                     # print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
                     # Sampling
-                    last_word_logits = dec_output [-1]
-                    softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
-                    word_index = np.random.choice(len(last_word_logits), p=softmax_p)
-                    pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-                    dec_input = torch.tensor ([[word_index]]).to (device)
-                    print (f'decoder shape - {dec_input.shape}')
-                    print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
+                    # last_word_logits = dec_output [-1]
+                    # softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
+                    # word_index = np.random.choice(len(last_word_logits), p=softmax_p)
+                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+                    # dec_input = torch.tensor ([[word_index]]).to (device)
+                    # print (f'decoder shape - {dec_input.shape}')
+                    # print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
 
                     # topk
                     # topv, topi = dec_output.data.topk(1)
@@ -128,8 +128,6 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     # break
 
                 # val_loss += (loss.item () / target_len)
-                print (f'question - {question [0]}')
-                print (f'pred - {pred_words}')
                 question_str_list = question [0].split ()
                 val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
                 val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
@@ -168,7 +166,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
 
                 loss = 0
-
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
