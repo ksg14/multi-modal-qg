@@ -101,9 +101,10 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     last_word_logits = dec_output   
                     softmax_p = F.softmax(last_word_logits, dim=1).detach()
                     word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
-                    pred_words.append(dataloader.dataset.index_to_word [str (word_index [0] [0])])
+                    pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
                     dec_input = word_index.detach ()
-                    print (f'nest word idx - {word_index [0] [0]} , next word - {pred_words [-1]}')
+                    print (f'decoder shape - {dec_input.shape}')
+                    print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
                     # Sampling
                     # last_word_logits = dec_output[-1]
