@@ -140,7 +140,8 @@ if __name__ == '__main__':
 	weights_matrix = torch.load (config.learned_weight_path)
 	emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-	av_enc_model = AudioVideoEncoder ()
+	av_enc_model = AudioVideoEncoder (download_pretrained=False)
+	av_enc_model.load_state_dict(torch.load(config.av_model_path))
 	av_enc_model.eval ()
 
 	text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \

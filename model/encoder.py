@@ -21,9 +21,9 @@ class AudioEncoder (Module):
         return embeddings
 
 class VideoEncoder (Module):
-    def __init__ (self):
+    def __init__ (self, download_pretrained=False):
         super().__init__()
-        self.resnet3d = models.video.r2plus1d_18 (pretrained=True, progress=True)
+        self.resnet3d = models.video.r2plus1d_18 (pretrained=download_pretrained, progress=True)
 
     def forward (self, video_frames):
         embeddings = self.resnet3d (video_frames)
@@ -63,11 +63,11 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self):
+    def __init__(self, download_pretrained=False):
         super().__init__()
 
         self.audio_enc = AudioEncoder ()
-        self.video_enc = VideoEncoder ()
+        self.video_enc = VideoEncoder (download_pretrained)
 
     def forward (self, audio_file, video_frames):
         audio_out = self.audio_enc (audio_file)
