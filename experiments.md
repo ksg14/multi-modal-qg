@@ -22,3 +22,4 @@
 * 2 layer lstm with dropout
 * Random Sampling Decoder strategy
 * Attention on context words
+* Backprop to audio and video encoder
