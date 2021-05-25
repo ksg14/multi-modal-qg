@@ -62,7 +62,7 @@ class AttnDecoder (Module):
         self.attn = Linear (self.word_emb_dim + self.hidden_dim, self.max_length)
         self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.hidden_dim, self.hidden_dim)
+        self.lstm = LSTM (self.hidden_dim, self.hidden_dim, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()

@@ -1,6 +1,7 @@
 import torch
 from torch._C import device
 from torch.nn import Module, LSTM, Linear, AdaptiveAvgPool1d
+from torch.nn.functional import dropout
 # import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 from torch.nn.modules.conv import Conv1d
@@ -31,7 +32,7 @@ class VideoEncoder (Module):
         return embeddings
 
 class TextEncoder (Module):
-    def __init__ (self, num_layers, dropout, hidden_dim, emb_dim, emb_layer, device):
+    def __init__ (self, num_layers, dropout_p, hidden_dim, emb_dim, emb_layer, device):
         super().__init__()
 
         self.num_layers = num_layers
@@ -39,8 +40,9 @@ class TextEncoder (Module):
         self.embedding_dim = emb_dim
         self.word_embeddings = emb_layer
         self.device = device
+        self.dropout_p = dropout_p
 
-        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers)
+        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
 
         self.initialise_weights ()
         

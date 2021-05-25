@@ -71,12 +71,12 @@ class Config():
     context_max_lenth = 283
     # text encoder
     text_lstm_hidden_dim = 512
-    text_lstm_layers = 1
+    text_lstm_layers = 2
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 1
+    dec_lstm_layers = 2
     dec_lstm_dropout = 0.2
     
     # checkpoints
