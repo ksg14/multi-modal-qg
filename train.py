@@ -262,14 +262,14 @@ if __name__ == '__main__':
                         max_length=config.context_max_lenth, \
                         device=device)
 
+    av_enc_model.to (device)
+    text_enc_model.to (device)
+    dec_model.to (device)
+
     criterion = CrossEntropyLoss()
     # av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
-
-    av_enc_model.to (device)
-    text_enc_model.to (device)
-    dec_model.to (device)
 
     epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
 
