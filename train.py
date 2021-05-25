@@ -1,5 +1,6 @@
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
+from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
@@ -92,25 +93,38 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                 pred_words = []
 
-                for di in range(pred_max_len):
+                for di in range(target_len):
                     dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
                     # loss += criterion (dec_output, target [0][di].view (-1))
-                    
+
+                    # Greedy
+                    # last_word_logits = dec_output   
+                    # softmax_p = F.softmax(last_word_logits, dim=1).detach()
+                    # word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
+                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
+                    # dec_input = word_index.detach ()
+                    # print (f'decoder shape - {dec_input.shape}')
+                    # print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
+
                     # Sampling
-                    # last_word_logits = y_pred[0][-1]
-                    # p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-                    # word_index = np.random.choice(len(last_word_logits), p=p)
-                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-                    
+                    last_word_logits = dec_output [-1]
+                    softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
+                    word_index = np.random.choice(len(last_word_logits), p=softmax_p)
+                    pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+                    dec_input = torch.tensor ([[word_index]]).to (device)
+                    # print (f'decoder shape - {dec_input.shape}')
+                    # print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
+
                     # topk
-                    topv, topi = dec_output.data.topk(1)
-                    pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
+                    # topv, topi = dec_output.data.topk(1)
+                    # pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
 
-                    dec_input = topi.squeeze().detach().to (device)
+                    # dec_input = topi.squeeze().detach().to (device)
+                    # dec_input = word_index.detach().to (device)
 
-                    if pred_words [-1] == '<end>':
-                        del pred_words [-1]
-                        break
+                    # if pred_words [-1] == '<end>':
+                    #     del pred_words [-1]
+                    #     break
                     # break
 
                 # val_loss += (loss.item () / target_len)
@@ -128,7 +142,8 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
-    best_bleu = -1
+    best_bleu = 0
+    best_epoch = -1
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
@@ -152,7 +167,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
 
                 loss = 0
-
 
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
@@ -190,16 +204,25 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         # Save best model
         if val_bleu_1 > best_bleu:
             best_bleu = val_bleu_1
+            best_epoch = epoch
 
             print ('Saving new best model !')
             # save_model (av_enc_model, config.av_model_path)
             save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
             save_weights (dec_model.emb_layer, config.learned_weight_path)
+        
+        # Save last epoch model
+        if epoch == n_epochs-1:
+            print ('Saving last epoch model !')
+            # save_model (av_enc_model, config.av_model_path)
+            save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
+            save_model (dec_model, config.output_path / 'last_decoder.pth')
+            save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pth')
 
         print({ 'epoch': epoch, 'train_loss': epoch_stats ['train']['loss'] [-1] })
         # break
-    return epoch_stats
+    return epoch_stats, best_epoch
 
 if __name__ == '__main__':
     config = Config ()
@@ -239,18 +262,20 @@ if __name__ == '__main__':
                         max_length=config.context_max_lenth, \
                         device=device)
 
+    av_enc_model.to (device)
+    text_enc_model.to (device)
+    dec_model.to (device)
+
     criterion = CrossEntropyLoss()
     # av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    av_enc_model.to (device)
-    text_enc_model.to (device)
-    dec_model.to (device)
+    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
 
-    epoch_stats = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
+    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
 
-    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_lenth, question_max_length, device)
+    print (f'Best epoch - {best_epoch} !')
 
     try:
         with open (config.stats_json_path, 'w') as f:

@@ -23,7 +23,7 @@ class AudioEncoder (Module):
 class VideoEncoder (Module):
     def __init__ (self):
         super().__init__()
-        self.resnet3d = models.video.r2plus1d_18 (pretrained=False, progress=True)
+        self.resnet3d = models.video.r2plus1d_18 (pretrained=True, progress=True)
 
     def forward (self, video_frames):
         embeddings = self.resnet3d (video_frames)

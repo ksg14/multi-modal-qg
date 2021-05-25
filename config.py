@@ -16,7 +16,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-2/')
+    output_path = Path (r'results/exp-4/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
@@ -60,8 +60,8 @@ class Config():
     glove_matrix_file = glove_path / f'6B.{glove_emb_dim}_matrix.npy'
 
     # hyper-params
-    epochs = 50
-    lr = 0.01
+    epochs = 100
+    lr = 1e-04
     optim='adam' # sgd, adam
     audio_emb = 128
     av_emb = 128 + 400
