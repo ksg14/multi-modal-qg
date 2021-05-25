@@ -145,7 +145,7 @@ if __name__ == '__main__':
 	av_enc_model.eval ()
 
 	text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
-									dropout=config.text_lstm_dropout, \
+									dropout_p=config.text_lstm_dropout, \
 									hidden_dim=config.text_lstm_hidden_dim, \
 									emb_dim=emb_dim, \
 									emb_layer=emb_layer, \
