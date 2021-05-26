@@ -60,7 +60,7 @@ class Config():
     glove_matrix_file = glove_path / f'6B.{glove_emb_dim}_matrix.npy'
 
     # hyper-params
-    epochs = 100
+    epochs = 1
     lr = 1e-04
     optim='adam' # sgd, adam
     audio_emb = 128
