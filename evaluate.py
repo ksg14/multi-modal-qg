@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 import pickle
+import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder
 from model.decoder import AttnDecoder, Decoder
@@ -31,7 +32,7 @@ def create_emb_layer (weights_matrix, non_trainable):
 		emb_layer.weight.requires_grad = False
 	return emb_layer, num_embeddings, embedding_dim
 
-def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, device):
+def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, strategy, device):
 	# val_loss = 0.0
 	val_bleu = 0.0
 	val_bleu_1 = 0.0
@@ -68,30 +69,33 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 					dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
 					# loss += criterion (dec_output, target [0][di].view (-1))
 					
-					# Greedy
-					# last_word_logits = dec_output   
-					# softmax_p = F.softmax(last_word_logits, dim=1).detach()
-					# word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
-					# pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
-					# dec_input = word_index.detach ()
-					# print (f'decoder shape - {dec_input.shape}')
-					# print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
+					if strategy == 'greedy':
+						# Greedy
+						last_word_logits = dec_output   
+						softmax_p = F.softmax(last_word_logits, dim=1).detach()
+						word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
+						pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
+						dec_input = word_index.detach ()
+						# print (f'decoder shape - {dec_input.shape}')
+						# print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
-					# Sampling
-					last_word_logits = dec_output [-1]
-					softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
-					word_index = np.random.choice(len(last_word_logits), p=softmax_p)
-					pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-					dec_input = torch.tensor ([[word_index]]).to (device)
-					# print (f'decoder shape - {dec_input.shape}')
-					# print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
+					elif strategy == 'sampling':
+						# Sampling
+						last_word_logits = dec_output [-1]
+						softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
+						word_index = np.random.choice(len(last_word_logits), p=softmax_p)
+						pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+						dec_input = torch.tensor ([[word_index]]).to (device)
+						# print (f'decoder shape - {dec_input.shape}')
+						# print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
 
-					# topk
-					# topv, topi = dec_output.data.topk(1)
-					# pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
+					elif strategy == 'topk':
+						# topk
+						topv, topi = dec_output.data.topk(1)
+						pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
 
-					# dec_input = topi.squeeze().detach().to (device)
-					# dec_input = word_index.detach().to (device)
+						dec_input = topi.squeeze().detach().to (device)
+						dec_input = word_index.detach().to (device)
 
 					if pred_words [-1] == '<end>':
 						del pred_words [-1]
@@ -118,62 +122,81 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 	return predictions, val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
 if __name__ == '__main__':
-	config = Config ()
+	parser = argparse.ArgumentParser(description='Evaluate model')
+	parser.add_argument('-b',
+						'--best',
+						action='store_true',
+						help='get best epoch results')
+	parser.add_argument('-l',
+						'--last',
+						action='store_true',
+						help='get last epoch results')
+	parser.add_argument('-c', 
+						'--config_path',
+						type=str,
+						required=True)
+	parser.add_argument('-s', 
+						'--strategy', # greedy, sampling, topk
+						type=str,
+						required=True)
 
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	print(f'Device - {device}')
+	args = parser.parse_args()
 
-	av_emb = 128 + 400 # + 128
-	question_max_length = 21
-	context_max_lenth = 283
+	try:
+		config = Config (args.config_path)
+	except Exception as e:
+		print (f' Config load error {str (e)}')
+		config = None
 
-	# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
-	# weights_matrix = weights_matrix.long ().to (device)
+	if config:
+		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+		print(f'Device - {device}')
 
-	mean = [0.43216, 0.394666, 0.37645]
-	std = [0.22803, 0.22145, 0.216989]
-	video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (mean, std)])
+		# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
+		# weights_matrix = weights_matrix.long ().to (device)
 
-	test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
-	test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
+		video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (config.mean, config.std)])
 
-	weights_matrix = torch.load (config.learned_weight_path)
-	emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
+		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
+		test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
 
-	av_enc_model = AudioVideoEncoder (download_pretrained=False)
-	av_enc_model.load_state_dict(torch.load(config.av_model_path))
-	av_enc_model.eval ()
+		weights_matrix = torch.load (config.learned_weight_path)
+		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-	text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
-									dropout_p=config.text_lstm_dropout, \
-									hidden_dim=config.text_lstm_hidden_dim, \
-									emb_dim=emb_dim, \
+		av_enc_model = AudioVideoEncoder (download_pretrained=False)
+		av_enc_model.load_state_dict(torch.load(config.av_model_path))
+		av_enc_model.eval ()
+
+		text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
+										dropout_p=config.text_lstm_dropout, \
+										hidden_dim=config.text_lstm_hidden_dim, \
+										emb_dim=emb_dim, \
+										emb_layer=emb_layer, \
+										device=device)
+		text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
+		text_enc_model.eval()
+
+		dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
+									dropout_p=config.dec_lstm_dropout, \
+									hidden_dim=config.dec_lstm_hidden_dim, \
+									n_vocab=n_vocab, \
+									word_emb_dim=emb_dim, \
+									av_emb_dim=config.av_emb, \
 									emb_layer=emb_layer, \
+									max_length=config.context_max_lenth, \
 									device=device)
-	text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
-	text_enc_model.eval()
+		dec_model.load_state_dict(torch.load(config.dec_model_path))
+		dec_model.eval ()
 
-	dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
-								dropout_p=config.dec_lstm_dropout, \
-								hidden_dim=config.dec_lstm_hidden_dim, \
-								n_vocab=n_vocab, \
-								word_emb_dim=emb_dim, \
-								av_emb_dim=av_emb, \
-								emb_layer=emb_layer, \
-								max_length=context_max_lenth, \
-								device=device)
-	dec_model.load_state_dict(torch.load(config.dec_model_path))
-	dec_model.eval ()
+		av_enc_model.to (device)
+		text_enc_model.to (device)
+		dec_model.to (device)
 
-	av_enc_model.to (device)
-	text_enc_model.to (device)
-	dec_model.to (device)
+		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.question_max_length, args.strategy, device)
 
-	predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, context_max_lenth, question_max_length, device)
+		with open (config.predictions_json_path, 'w') as file_io:
+			json.dump (predictions, file_io)
+			print (f'Predictions saved to {config.predictions_json_path}')	
 
-	with open (config.predictions_json_path, 'w') as file_io:
-		json.dump (predictions, file_io)
-		print (f'Predictions saved to {config.predictions_json_path}')	
-
-	print ('Done !')
+		print ('Done !')
 

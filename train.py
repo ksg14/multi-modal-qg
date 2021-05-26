@@ -98,20 +98,20 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     # loss += criterion (dec_output, target [0][di].view (-1))
 
                     # Greedy
-                    # last_word_logits = dec_output   
-                    # softmax_p = F.softmax(last_word_logits, dim=1).detach()
-                    # word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
-                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
-                    # dec_input = word_index.detach ()
+                    last_word_logits = dec_output   
+                    softmax_p = F.softmax(last_word_logits, dim=1).detach()
+                    word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
+                    pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
+                    dec_input = word_index.detach ()
                     # print (f'decoder shape - {dec_input.shape}')
                     # print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
                     # Sampling
-                    last_word_logits = dec_output [-1]
-                    softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
-                    word_index = np.random.choice(len(last_word_logits), p=softmax_p)
-                    pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
-                    dec_input = torch.tensor ([[word_index]]).to (device)
+                    # last_word_logits = dec_output [-1]
+                    # softmax_p = F.softmax(last_word_logits, dim=0).detach().cpu ().numpy()
+                    # word_index = np.random.choice(len(last_word_logits), p=softmax_p)
+                    # pred_words.append(dataloader.dataset.index_to_word [str (word_index)])
+                    # dec_input = torch.tensor ([[word_index]]).to (device)
                     # print (f'decoder shape - {dec_input.shape}')
                     # print (f'nest word idx - {word_index} , next word - {pred_words [-1]}')
 
@@ -215,10 +215,10 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         # Save last epoch model
         if epoch == n_epochs-1:
             print ('Saving last epoch model !')
-            # save_model (av_enc_model, config.av_model_path)
+            save_model (av_enc_model, config.output_path / 'last_av_model.pth')
             save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
             save_model (dec_model, config.output_path / 'last_decoder.pth')
-            save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pth')
+            save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pt')
 
         print({ 'epoch': epoch, 'train_loss': epoch_stats ['train']['loss'] [-1] })
         # break

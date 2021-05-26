@@ -16,7 +16,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-5/')
+    output_path = Path (r'results/exp-6/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
@@ -86,7 +86,7 @@ class Config():
         attributes = [ key for key in Config.__dict__ if key [0] != '_' and not callable(Config.__dict__ [key])]
         save_data = { key : Config.__dict__ [key] for key in attributes }
    
-        with open (f'{self.output_path}config.json', 'w') as f:
+        with open (self.output_path / 'config.json', 'w') as f:
             json.dump (save_data, f)
         return
 
