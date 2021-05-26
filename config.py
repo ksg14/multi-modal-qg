@@ -16,7 +16,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-5/')
+    output_path = Path (r'results/exp-6/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
@@ -59,7 +59,7 @@ class Config():
     glove_matrix_file = glove_path / f'6B.{glove_emb_dim}_matrix.npy'
 
     # hyper-params
-    epochs = 1
+    epochs = 100
     lr = 1e-04
     optim='adam' # sgd, adam
     audio_emb = 128
@@ -70,12 +70,12 @@ class Config():
     context_max_lenth = 283
     # text encoder
     text_lstm_hidden_dim = 512
-    text_lstm_layers = 2
+    text_lstm_layers = 3
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 2
+    dec_lstm_layers = 3
     dec_lstm_dropout = 0.2
     
     # checkpoints
