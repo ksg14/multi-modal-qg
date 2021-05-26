@@ -287,8 +287,8 @@ if __name__ == '__main__':
     
     try:
         config.save_config ()
-    except Exception:
-        print (f'Unable to save config {str (Exception)}')
+    except Exception as e:
+        print (f'Unable to save config {str (e)}')
     
     
     print ('Done !')
