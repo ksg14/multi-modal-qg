@@ -1,4 +1,3 @@
-from numpy.lib.function_base import _quantile_dispatcher
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
 from torch.nn import functional as F
@@ -143,7 +142,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	try:
-		config = Config ()
+		config = Config (args.config_path)
 	except Exception as e:
 		print (f' Config load error {str (e)}')
 		config = None

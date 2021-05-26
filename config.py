@@ -100,7 +100,10 @@ class Config():
 
         for key, value in kwargs.items():
             if key in class_attributes:
-                setattr (Config, key, value)
+                if isinstance (value, str) and key != 'optim':
+                    setattr (Config, key, Path (value))
+                else:
+                    setattr (Config, key, value)
         # print (Config.__dict__)
         return
 
