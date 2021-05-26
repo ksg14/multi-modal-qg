@@ -16,7 +16,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-4/')
+    output_path = Path (r'results/exp-5/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
@@ -71,12 +71,12 @@ class Config():
     context_max_lenth = 283
     # text encoder
     text_lstm_hidden_dim = 512
-    text_lstm_layers = 1
+    text_lstm_layers = 2
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 1
+    dec_lstm_layers = 2
     dec_lstm_dropout = 0.2
     
     # checkpoints

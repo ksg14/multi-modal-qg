@@ -1,6 +1,7 @@
 import torch
 from torch._C import device
 from torch.nn import Module, LSTM, Linear, AdaptiveAvgPool1d
+from torch.nn.functional import dropout
 # import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 from torch.nn.modules.conv import Conv1d
@@ -21,9 +22,9 @@ class AudioEncoder (Module):
         return embeddings
 
 class VideoEncoder (Module):
-    def __init__ (self):
+    def __init__ (self, download_pretrained=False):
         super().__init__()
-        self.resnet3d = models.video.r2plus1d_18 (pretrained=True, progress=True)
+        self.resnet3d = models.video.r2plus1d_18 (pretrained=download_pretrained, progress=True)
 
     def forward (self, video_frames):
         embeddings = self.resnet3d (video_frames)
@@ -31,7 +32,7 @@ class VideoEncoder (Module):
         return embeddings
 
 class TextEncoder (Module):
-    def __init__ (self, num_layers, dropout, hidden_dim, emb_dim, emb_layer, device):
+    def __init__ (self, num_layers, dropout_p, hidden_dim, emb_dim, emb_layer, device):
         super().__init__()
 
         self.num_layers = num_layers
@@ -39,8 +40,9 @@ class TextEncoder (Module):
         self.embedding_dim = emb_dim
         self.word_embeddings = emb_layer
         self.device = device
+        self.dropout_p = dropout_p
 
-        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers)
+        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
 
         self.initialise_weights ()
         
@@ -63,11 +65,11 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self):
+    def __init__(self, download_pretrained=False):
         super().__init__()
 
         self.audio_enc = AudioEncoder ()
-        self.video_enc = VideoEncoder ()
+        self.video_enc = VideoEncoder (download_pretrained)
 
     def forward (self, audio_file, video_frames):
         audio_out = self.audio_enc (audio_file)

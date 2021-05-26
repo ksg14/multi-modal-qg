@@ -62,7 +62,7 @@ class AttnDecoder (Module):
         self.attn = Linear (self.word_emb_dim + self.hidden_dim, self.max_length)
         self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.hidden_dim, self.hidden_dim)
+        self.lstm = LSTM (self.hidden_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()
@@ -70,7 +70,7 @@ class AttnDecoder (Module):
     def forward(self, word, enc_seq_len, av_emb, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
-        attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [0]), 1))
+        attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
         attn_pre_soft [enc_seq_len:] = float ('-inf')
 
         attn_weights = F.softmax(attn_pre_soft, dim=1)

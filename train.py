@@ -139,7 +139,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0
@@ -147,7 +147,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
-        # av_enc_model.train ()
+        av_enc_model.train ()
         text_enc_model.train ()
         dec_model.train ()
 
@@ -157,7 +157,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
-                # av_enc_optimizer.zero_grad()
+                av_enc_optimizer.zero_grad()
                 text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
@@ -183,7 +183,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 loss.backward()
 
-                # av_enc_optimizer.step()
+                av_enc_optimizer.step()
                 text_enc_optimizer.step ()
                 dec_optimizer.step()
 
@@ -207,7 +207,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
             best_epoch = epoch
 
             print ('Saving new best model !')
-            # save_model (av_enc_model, config.av_model_path)
+            save_model (av_enc_model, config.av_model_path)
             save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
             save_weights (dec_model.emb_layer, config.learned_weight_path)
@@ -242,11 +242,11 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    av_enc_model = AudioVideoEncoder ()
-    av_enc_model.eval ()
+    av_enc_model = AudioVideoEncoder (download_pretrained=True)
+    # av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
-                        dropout=config.text_lstm_dropout, \
+                        dropout_p=config.text_lstm_dropout, \
                         hidden_dim=config.text_lstm_hidden_dim, \
                         emb_dim=emb_dim, \
                         emb_layer=emb_layer, \
@@ -267,11 +267,11 @@ if __name__ == '__main__':
     dec_model.to (device)
 
     criterion = CrossEntropyLoss()
-    # av_enc_optimizer = Adam(av_enc_model.parameters(), lr=0.001)
+    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=config.lr)
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
+    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
 
     # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
 

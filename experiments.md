@@ -16,3 +16,10 @@
 * Single layer lstm
 * Random Sampling Decode strategy
 * Attention on context words
+
+### Exp-5 :
+
+* 2 layer lstm with dropout
+* Random Sampling Decoder strategy
+* Attention on context words
+* Backprop to audio and video encoder
