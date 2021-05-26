@@ -22,7 +22,6 @@ class Config():
     dec_model_path = output_path / 'dec_model.pth'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
-    predictions_json_path = output_path / 'predictions.json'
     learned_weight_path = output_path / 'learned_weight.pt'
 
     # dataset

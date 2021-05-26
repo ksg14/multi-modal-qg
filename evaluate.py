@@ -194,9 +194,10 @@ if __name__ == '__main__':
 
 		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.question_max_length, args.strategy, device)
 
-		with open (config.predictions_json_path, 'w') as file_io:
+		out_file_path = config.output_path / f'predictions_{args.strategy}.json'
+		with open (out_file_path, 'w') as file_io:
 			json.dump (predictions, file_io)
-			print (f'Predictions saved to {config.predictions_json_path}')	
+			print (f'Predictions saved to {out_file_path}')	
 
 		print ('Done !')
 
