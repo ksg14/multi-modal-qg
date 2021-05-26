@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path, PurePath
 import json
 import os
 
@@ -83,7 +83,13 @@ class Config():
 
     def save_config (self):
         attributes = [ key for key in Config.__dict__ if key [0] != '_' and not callable(Config.__dict__ [key])]
-        save_data = { key : Config.__dict__ [key] for key in attributes }
+        save_data = {}
+
+        for key in attributes:
+            if isinstance(Config.__dict__ [key], PurePath):
+                save_data [key] = str (Config.__dict__ [key])
+            else:
+                save_data [key] = Config.__dict__ [key]
    
         with open (self.output_path / 'config.json', 'w') as f:
             json.dump (save_data, f)
