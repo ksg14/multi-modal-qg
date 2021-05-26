@@ -155,7 +155,7 @@ if __name__ == '__main__':
 		# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
 		# weights_matrix = weights_matrix.long ().to (device)
 
-		video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (config.mean, config.std)])
+		video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (config.vid_mean, config.vid_std)])
 
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
 		test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
