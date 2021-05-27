@@ -74,7 +74,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 						softmax_p = F.softmax(last_word_logits, dim=1).detach()
 						word_index = torch.argmax (softmax_p, dim=1, keepdim=True)
 						pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
-						dec_input = word_index.detach ()
+						dec_input = word_index.detach ().to (device)
 						# print (f'decoder shape - {dec_input.shape}')
 						# print (f'nest word idx - {word_index.squeeze().item ()} , next word - {pred_words [-1]}')
 
@@ -94,7 +94,6 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 						pred_words.append(dataloader.dataset.index_to_word [str (topi.item ())])
 
 						dec_input = topi.squeeze().detach().to (device)
-						dec_input = word_index.detach().to (device)
 
 					if pred_words [-1] == '<end>':
 						del pred_words [-1]
