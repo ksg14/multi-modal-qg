@@ -159,11 +159,20 @@ if __name__ == '__main__':
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
 		test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
 
-		weights_matrix = torch.load (config.learned_weight_path)
+		if args.last:
+			weights_matrix = torch.load (config.output_path / 'last_weigths.pt')
+		else:
+			weights_matrix = torch.load (config.learned_weight_path)
+	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
 		av_enc_model = AudioVideoEncoder (download_pretrained=False)
-		av_enc_model.load_state_dict(torch.load(config.av_model_path))
+		
+		if args.last:
+			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth'))
+		else:
+			av_enc_model.load_state_dict(torch.load(config.av_model_path))
+		
 		av_enc_model.eval ()
 
 		text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
@@ -172,7 +181,11 @@ if __name__ == '__main__':
 										emb_dim=emb_dim, \
 										emb_layer=emb_layer, \
 										device=device)
-		text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
+
+		if args.last:
+			text_enc_model.load_state_dict(torch.load(config.output_path / 'last_text_enc.pth'))
+		else:
+			text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
 		text_enc_model.eval()
 
 		dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
@@ -184,7 +197,11 @@ if __name__ == '__main__':
 									emb_layer=emb_layer, \
 									max_length=config.context_max_lenth, \
 									device=device)
-		dec_model.load_state_dict(torch.load(config.dec_model_path))
+		
+		if args.last:
+			dec_model.load_state_dict(torch.load(config.output_path / 'last_decoder.pth'))
+		else:
+			dec_model.load_state_dict(torch.load(config.dec_model_path))
 		dec_model.eval ()
 
 		av_enc_model.to (device)
@@ -193,7 +210,11 @@ if __name__ == '__main__':
 
 		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.question_max_length, args.strategy, device)
 
-		out_file_path = config.output_path / f'predictions_{args.strategy}.json'
+		if args.last:
+			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
+		else:
+			out_file_path = config.output_path / f'best_predictions_{args.strategy}.json'
+
 		with open (out_file_path, 'w') as file_io:
 			json.dump (predictions, file_io)
 			print (f'Predictions saved to {out_file_path}')	
