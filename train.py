@@ -150,8 +150,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
-                print (f'frames - {frames.shape}')
-
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 n_frames = av_enc_out.shape [0]
