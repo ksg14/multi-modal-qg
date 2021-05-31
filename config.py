@@ -74,7 +74,7 @@ class Config():
     av_kernel_sz = 3
     av_stride = 1
     av_hidden_dim = 512
-    video_emb_dim = 1000
+    flatten_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
     text_lstm_layers = 3

@@ -115,7 +115,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, av_max_len, pred_max_len, video_emb_dim, device):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, av_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0
@@ -142,7 +142,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
                 n_frames = av_enc_out.shape [0]
-                padded_av_out = F.pad (av_enc_out, (0, av_max_len-n_frames))
+                padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
 
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.video_emb_dim)
+    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
     # av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
@@ -237,7 +237,7 @@ if __name__ == '__main__':
                         hidden_dim=config.dec_lstm_hidden_dim, \
                         n_vocab=n_vocab, \
                         word_emb_dim=emb_dim, \
-                        av_emb_dim=config.video_emb_dim, \
+                        av_emb_dim=config.av_hidden_dim, \
                         emb_layer=emb_layer, \
                         text_max_length=config.context_max_lenth, \
                         av_max_length=config.av_max_length, \
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length, video_emb_dim=config.video_emb_dim)
+    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
 
     validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
     
