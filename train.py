@@ -58,13 +58,13 @@ def repackage_hidden(h):
     else:
         return tuple(repackage_hidden(v) for v in h)
 
-def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, device):
-    # val_loss = 0.0
+def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, context_max_len, av_max_len, pred_max_len, device):
+    val_loss = 0.0
     val_bleu = 0.0
     val_bleu_1 = 0.0
     val_bleu_2 = 0.0
     val_bleu_3 = 0.0
-    val_bleu_4 = 0.0
+    # val_bleu_4 = 0.0
     n_len = len (dataloader)
     
     av_enc_model.eval () 
@@ -80,6 +80,12 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
+                n_frames = av_enc_out.shape [0]
+                padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
+
+                text_enc_hidden = text_enc_model.init_state (1)
+                all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
+
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
 
@@ -87,15 +93,15 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
 
-                # loss = 0
+                loss = 0
                 dec_input = torch.tensor([[dataloader.dataset.vocab ['<start>']]]).to (device)
                 dec_hidden = text_enc_hidden
 
                 pred_words = []
 
                 for di in range(target_len):
-                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
-                    # loss += criterion (dec_output, target [0][di].view (-1))
+                    dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, n_frames, context_len, padded_av_out, dec_hidden, all_enc_outputs)
+                    loss += criterion (dec_output, target [0][di].view (-1))
 
                     # Greedy
                     last_word_logits = dec_output   
@@ -104,21 +110,28 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
                     pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
                     dec_input = word_index.detach ()
 
+                val_loss += loss.item () / target_len
+
                 question_str_list = question [0].split ()
                 val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
                 val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
                 val_bleu_3 += sentence_bleu (question_str_list, pred_words, weights=(0.33, 0.33, 0.33, 0))
-                val_bleu_4 += sentence_bleu (question_str_list, pred_words)
+                # val_bleu_4 += sentence_bleu (question_str_list, pred_words)
                 val_bleu += sentence_bleu (question_str_list, pred_words)
-                tepoch.set_postfix (val_bleu=val_bleu)
+                tepoch.set_postfix (val_loss=val_loss, val_bleu=val_bleu)
     
-    print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
-    return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
+    val_loss /= n_len
+    val_bleu /= n_len
+    val_bleu_1 /= n_len 
+    val_bleu_2 /= n_len
+    val_bleu_3 /= n_len
+    print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
+    return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
 def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, av_max_len, pred_max_len, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
-    best_bleu = 0
+    best_epoch_score = float ('inf')
     best_epoch = -1
 
     for epoch in range (n_epochs):
@@ -171,19 +184,19 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                     epoch_stats ['train']['loss'] [-1] += ((loss.item () / target_len) / n_len).item ()
                 
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
-                break
-        break
-        val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_len, pred_max_len, device)
-        # epoch_stats ['val']['loss'].append (val_loss)
+                # break
+        # break
+        val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, context_max_len, pred_max_len, device)
+        epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
         epoch_stats ['val']['bleu_2'].append (val_bleu_2)
         epoch_stats ['val']['bleu_3'].append (val_bleu_3)
-        epoch_stats ['val']['bleu_4'].append (val_bleu_4)
+        # epoch_stats ['val']['bleu_4'].append (val_bleu_4)
 
         # Save best model
-        if val_bleu_1 > best_bleu:
-            best_bleu = val_bleu_1
+        if val_loss < best_epoch_score:
+            best_epoch_score = val_loss
             best_epoch = epoch
 
             print ('Saving new best model !')
