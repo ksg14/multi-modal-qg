@@ -66,8 +66,6 @@ class VideoConvLstmEncoder (Module):
 
         cnn_out = self.flatten (second_pass)
 
-        print (f'cnn out shape - {cnn_out.shape}')
-
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
         return lstm_out
