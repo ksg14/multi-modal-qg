@@ -40,13 +40,13 @@ class VideoConvLstmEncoder (Module):
         self.bn1 = BatchNorm2d (4)
         self.conv2 = Conv2d (4, 6, self.kernel_sz, self.stride)
         self.bn2 = BatchNorm2d (6)
-        self.maxpool1 = MaxPool2d (self.kernel_sz, self.stride)
+        self.maxpool1 = MaxPool2d (self.kernel_sz, self.kernel_sz)
 
         self.conv3 = Conv2d (6, 8, self.kernel_sz, self.stride)
         self.bn3 = BatchNorm2d (8)
         self.conv4 = Conv2d (8, 10, self.kernel_sz, self.stride)
         self.bn4 = BatchNorm2d (10)
-        self.maxpool2 = MaxPool2d (self.kernel_sz, self.stride)
+        self.maxpool2 = MaxPool2d (self.kernel_sz, self.kernel_sz)
 
         self.flatten = Flatten ()
 

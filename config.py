@@ -70,7 +70,7 @@ class Config():
     context_max_lenth = 283
     # Video encoder
     av_in_channels = 3
-    av_kernel_sz = 2
+    av_kernel_sz = 3
     av_stride = 1
     av_hidden_dim = 512
     av_conv_dim = 10*23*23
