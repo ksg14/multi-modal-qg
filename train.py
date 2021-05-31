@@ -107,7 +107,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                     pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
                     dec_input = word_index.detach ()
 
-                val_loss += (loss.item ()) / target_len
+                val_loss += loss.item () / target_len
 
                 question_str_list = question [0].split ()
                 val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
@@ -117,12 +117,11 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 val_bleu += sentence_bleu (question_str_list, pred_words)
                 tepoch.set_postfix (val_loss=val_loss, val_bleu=val_bleu)
     
-    val_loss /= n_len
+    val_loss = val_loss.item () / n_len
     val_bleu /= n_len
     val_bleu_1 /= n_len 
     val_bleu_2 /= n_len
     val_bleu_3 /= n_len
-    
     print (f'{val_loss}')
     print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
