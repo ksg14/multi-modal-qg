@@ -103,9 +103,9 @@ class AttnDecoder (Module):
         
         xavier_uniform_ (self.out_layer.weight)
         normal_ (self.out_layer.bias)
-        xavier_uniform_ (self.attn.weight)
+        xavier_uniform_ (self.text_attn.weight)
         normal_ (self.text_attn.bias)
-        xavier_uniform_ (self.attn.weight)
+        xavier_uniform_ (self.av_attn.weight)
         normal_ (self.av_attn.bias)
         xavier_uniform_ (self.attn_combine.weight)
         normal_ (self.attn_combine.bias)
