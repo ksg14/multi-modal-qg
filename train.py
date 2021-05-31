@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.av_conv_dim)
+    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.video_emb_dim)
     # av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
@@ -238,9 +238,10 @@ if __name__ == '__main__':
                         hidden_dim=config.dec_lstm_hidden_dim, \
                         n_vocab=n_vocab, \
                         word_emb_dim=emb_dim, \
-                        av_emb_dim=config.av_emb, \
+                        av_emb_dim=config.video_emb_dim, \
                         emb_layer=emb_layer, \
-                        max_length=config.context_max_lenth, \
+                        text_max_length=config.context_max_lenth, \
+                        av_max_length=config.av_max_length, \
                         device=device)
 
     av_enc_model.to (device)

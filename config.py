@@ -68,7 +68,7 @@ class Config():
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
     context_max_lenth = 283
-    av_max_length = 0
+    av_max_length = 101
     # Video encoder
     av_in_channels = 3
     av_kernel_sz = 3
