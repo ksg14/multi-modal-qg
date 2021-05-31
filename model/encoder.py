@@ -1,10 +1,7 @@
 import torch
-from torch._C import device
-from torch.nn import Module, LSTM, Linear, AdaptiveAvgPool1d
-from torch.nn.functional import dropout
+from torch.nn import Module, LSTM, Linear, Dropout, GRU, Embedding, Conv2d, MaxPool2d, AdaptiveAvgPool1d, BatchNorm2d, Flatten
 # import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
-from torch.nn.modules.conv import Conv1d
 
 import torchvision.models as models
 
@@ -21,7 +18,7 @@ class AudioEncoder (Module):
         embeddings = self.adapt_avg_pool (out.view (1, out.shape [1], -1))
         return embeddings
 
-class VideoEncoder (Module):
+class VideoResnetEncoder (Module):
     def __init__ (self, download_pretrained=False):
         super().__init__()
         self.resnet3d = models.video.r2plus1d_18 (pretrained=download_pretrained, progress=True)
@@ -30,6 +27,51 @@ class VideoEncoder (Module):
         embeddings = self.resnet3d (video_frames)
 
         return embeddings
+
+class VideoConvLstmEncoder (Module):
+    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, conv_dim):
+        super().__init__()
+        self.in_channels = in_channels
+        self.kernel_sz = kernel_sz
+        self.stride = stride
+        self.hidden_dim = hidden_dim
+
+        self.conv1 = Conv2d (self.in_channels, 4, self.kernel_sz, self.stride)
+        self.bn1 = BatchNorm2d (4)
+        self.conv2 = Conv2d (4, 6, self.kernel_sz, self.stride)
+        self.bn2 = BatchNorm2d (6)
+        self.maxpool1 = MaxPool2d (self.kernel_sz, self.stride)
+
+        self.conv3 = Conv2d (6, 8, self.kernel_sz, self.stride)
+        self.bn3 = BatchNorm2d (8)
+        self.conv4 = Conv2d (8, 10, self.kernel_sz, self.stride)
+        self.bn4 = BatchNorm2d (10)
+        self.maxpool2 = MaxPool2d (self.kernel_sz, self.stride)
+
+        self.flatten = Flatten ()
+
+        self.lstm = LSTM(10*56*56, self.hidden_dim)
+
+        self.initialise_weights ()
+
+    def forward (self, video_frames):
+        first_pass = self.maxpool1 (self.bn2 (self.conv2 (self.bn1 (self.conv1 (video_frames)))))
+        second_pass = self.maxpool2 (self.bn4 (self.conv4 (self.bn3 (self.conv3 (first_pass)))))
+
+        cnn_out = self.flatten (second_pass)
+
+        print (cnn_out.shape)
+
+        lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
+
+        return lstm_out
+    
+    def initialise_weights (self):
+        for param in self.lstm.parameters():
+            if len(param.shape) >= 2:
+                orthogonal_(param.data)
+            else:
+                normal_(param.data)
 
 class TextEncoder (Module):
     def __init__ (self, num_layers, dropout_p, hidden_dim, emb_dim, emb_layer, device):
@@ -65,11 +107,12 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, download_pretrained=False):
+    def __init__(self, in_channels, kernel_sz, stride, hidden_dim, conv_dim):
         super().__init__()
 
         self.audio_enc = AudioEncoder ()
-        self.video_enc = VideoEncoder (download_pretrained)
+        # self.video_enc = VideoEncoder (download_pretrained)
+        self.video_enc = VideoConvLstmEncoder (in_channels, kernel_sz, stride, hidden_dim, conv_dim)
 
     def forward (self, audio_file, video_frames):
         audio_out = self.audio_enc (audio_file)
@@ -77,7 +120,7 @@ class AudioVideoEncoder (Module):
         # print (audio_emb.shape)
 
         video_emb = self.video_enc (video_frames)
-        # print (video_emb.shape)
+        print (video_emb.shape)
 
         enc_output = torch.cat ((audio_emb, video_emb), dim=1)
 
