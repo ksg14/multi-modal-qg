@@ -107,7 +107,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                     pred_words.append(dataloader.dataset.index_to_word [str (word_index.squeeze ().item ())])
                     dec_input = word_index.detach ()
 
-                val_loss += loss.item () / target_len
+                val_loss += (loss.item ()) / target_len
 
                 question_str_list = question [0].split ()
                 val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
@@ -262,9 +262,9 @@ if __name__ == '__main__':
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
+    # epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
 
-    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
+    validate (av_enc_model, text_enc_model, dec_model, criterion, val_dataloader, config.context_max_lenth, config.av_max_length, config.question_max_length, device)
     
     print (f'Best epoch - {best_epoch} !')
 
