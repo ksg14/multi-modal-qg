@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path, PurePath
 import json
 import os
 
@@ -16,13 +16,12 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-5/')
+    output_path = Path (r'results/exp-6/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
-    predictions_json_path = output_path / 'predictions.json'
     learned_weight_path = output_path / 'learned_weight.pt'
 
     # dataset
@@ -71,12 +70,12 @@ class Config():
     context_max_lenth = 283
     # text encoder
     text_lstm_hidden_dim = 512
-    text_lstm_layers = 2
+    text_lstm_layers = 3
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 2
+    dec_lstm_layers = 3
     dec_lstm_dropout = 0.2
     
     # checkpoints
@@ -84,9 +83,15 @@ class Config():
 
     def save_config (self):
         attributes = [ key for key in Config.__dict__ if key [0] != '_' and not callable(Config.__dict__ [key])]
-        save_data = { key : Config.__dict__ [key] for key in attributes }
+        save_data = {}
+
+        for key in attributes:
+            if isinstance(Config.__dict__ [key], PurePath):
+                save_data [key] = str (Config.__dict__ [key])
+            else:
+                save_data [key] = Config.__dict__ [key]
    
-        with open (f'{self.output_path}config.json', 'w') as f:
+        with open (self.output_path / 'config.json', 'w') as f:
             json.dump (save_data, f)
         return
 
@@ -95,7 +100,10 @@ class Config():
 
         for key, value in kwargs.items():
             if key in class_attributes:
-                setattr (Config, key, value)
+                if isinstance (value, str) and key != 'optim':
+                    setattr (Config, key, Path (value))
+                else:
+                    setattr (Config, key, value)
         # print (Config.__dict__)
         return
 

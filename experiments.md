@@ -23,3 +23,9 @@
 * Random Sampling Decoder strategy
 * Attention on context words
 * Backprop to audio and video encoder
+
+### Exp-6 :
+
+* 3 layer lstm with dropout
+* Attention on context words
+* Backprop to audio and video encoder
