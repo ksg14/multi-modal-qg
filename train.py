@@ -152,7 +152,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
-                
 
                 dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]]).to (device)
                 dec_hidden = text_enc_hidden

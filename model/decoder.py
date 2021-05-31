@@ -78,6 +78,7 @@ class AttnDecoder (Module):
         text_attn_weights = F.softmax(text_attn_pre_soft, dim=1)
         text_attn_applied = torch.bmm(text_attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
 
+        print (f'av emb - {av_emb.shape}')
         # Video attention
         av_attn_pre_soft = self.av_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
         av_attn_pre_soft [enc_frames:] = float ('-inf')
