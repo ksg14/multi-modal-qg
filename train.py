@@ -212,7 +212,7 @@ if __name__ == '__main__':
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
     weights_matrix = weights_matrix.long ().to (device)
     
-    video_transform = T.Compose ([ToFloatTensor (), Resize (112), Normalize (config.vid_mean, config.vid_std)])
+    video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 
     train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
     val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)

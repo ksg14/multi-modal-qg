@@ -73,7 +73,7 @@ class Config():
     av_kernel_sz = 2
     av_stride = 1
     av_hidden_dim = 512
-    av_conv_dim = 10*56*56
+    av_conv_dim = 10*23*23
     # text encoder
     text_lstm_hidden_dim = 512
     text_lstm_layers = 3

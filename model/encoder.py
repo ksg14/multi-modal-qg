@@ -55,7 +55,12 @@ class VideoConvLstmEncoder (Module):
         self.initialise_weights ()
 
     def forward (self, video_frames):
-        first_pass = self.maxpool1 (self.bn2 (self.conv2 (self.bn1 (self.conv1 (video_frames)))))
+        batch_sz = video_frames.shape [2]
+        channels = video_frames.shape [1]
+        height = video_frames.shape [3]
+        width = video_frames.shape [4]
+
+        first_pass = self.maxpool1 (self.bn2 (self.conv2 (self.bn1 (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))
         second_pass = self.maxpool2 (self.bn4 (self.conv4 (self.bn3 (self.conv3 (first_pass)))))
 
         cnn_out = self.flatten (second_pass)
