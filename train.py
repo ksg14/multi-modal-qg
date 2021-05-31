@@ -86,9 +86,6 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
 
-                text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
-
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
@@ -125,6 +122,8 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
     val_bleu_1 /= n_len 
     val_bleu_2 /= n_len
     val_bleu_3 /= n_len
+    
+    print (f'{val_loss}')
     print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
