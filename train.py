@@ -115,7 +115,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
     print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, pred_max_len, device):
+def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, av_max_len, pred_max_len, video_emb_dim, device):
     epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
     n_len = len (train_dataloader)
     best_bleu = 0
@@ -141,9 +141,11 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 av_enc_out = av_enc_model (audio_file [0], frames)
 
-                break
+                n_frames = av_enc_out.shape [0]
+                padded_av_out = F.pad (av_enc_out, (0, av_max_len-n_frames))
+
                 text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
+                all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
 
                 loss = 0
 
@@ -156,7 +158,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 dec_hidden = text_enc_hidden
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, n_frames, context_len, padded_av_out, dec_hidden, all_enc_outputs)
                     loss += criterion (dec_output, target [0][di].view (-1))
                     dec_input = target [0] [di]  # Teacher forcing
 
@@ -170,7 +172,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                     epoch_stats ['train']['loss'] [-1] += ((loss.item () / target_len) / n_len).item ()
                 
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
-                # break
+                break
         break
         val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, context_max_len, pred_max_len, device)
         # epoch_stats ['val']['loss'].append (val_loss)
@@ -216,8 +218,8 @@ if __name__ == '__main__':
 
     train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
     val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
-    train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=False)
-    val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=False)
+    train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=True)
+    val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=True)
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
@@ -250,7 +252,7 @@ if __name__ == '__main__':
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, pred_max_len=config.question_max_length)
+    epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length, video_emb_dim=config.video_emb_dim)
 
     validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
     

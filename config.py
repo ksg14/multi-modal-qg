@@ -68,12 +68,13 @@ class Config():
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
     context_max_lenth = 283
+    av_max_length = 0
     # Video encoder
     av_in_channels = 3
     av_kernel_sz = 3
     av_stride = 1
     av_hidden_dim = 512
-    av_conv_dim = 10*23*23
+    video_emb_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
     text_lstm_layers = 3

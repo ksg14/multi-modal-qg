@@ -23,7 +23,7 @@ def get_maxlen_frames (path):
     return max_len, avg_len / len (os.listdir (path))
 
 if __name__ == '__main__':
-    dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
+    dataset_path = Path (r'dataset')
     questions_file = 'data/preprocesses_text.json'
     frames_path = dataset_path / 'salient_frames'
 

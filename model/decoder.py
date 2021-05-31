@@ -47,19 +47,21 @@ class Decoder (Module):
         normal_ (self.out_layer.bias)
 
 class AttnDecoder (Module):
-    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, max_length, device):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, text_max_length, av_max_length, device):
         super(AttnDecoder, self).__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.n_vocab = n_vocab
         self.dropout_p = dropout_p
-        self.max_length = max_length
+        self.text_max_length = text_max_length
+        self.av_max_length = av_max_length
         self.av_emb_dim = av_emb_dim
         self.word_emb_dim = word_emb_dim
         self.emb_layer = emb_layer
         self.device = device
 
-        self.attn = Linear (self.word_emb_dim + self.hidden_dim, self.max_length)
+        self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
+        self.av_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
         self.lstm = LSTM (self.hidden_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
@@ -67,24 +69,30 @@ class AttnDecoder (Module):
 
         self.initialise_weights ()
 
-    def forward(self, word, enc_seq_len, av_emb, hidden, encoder_outputs):
+    def forward(self, word, enc_frames, enc_seq_len, av_emb, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
-        attn_pre_soft = self.attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
-        attn_pre_soft [enc_seq_len:] = float ('-inf')
+        # Text attention
+        text_attn_pre_soft = self.text_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
+        text_attn_pre_soft [enc_seq_len:] = float ('-inf')
+        text_attn_weights = F.softmax(text_attn_pre_soft, dim=1)
+        text_attn_applied = torch.bmm(text_attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
 
-        attn_weights = F.softmax(attn_pre_soft, dim=1)
+        # Video attention
+        av_attn_pre_soft = self.av_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
+        av_attn_pre_soft [enc_frames:] = float ('-inf')
+        av_attn_weights = F.softmax(av_attn_pre_soft, dim=1)
+        av_attn_applied = torch.bmm(av_attn_weights.unsqueeze(0), av_emb.unsqueeze(0))
+        print (f'av after attention - {av_attn_applied.shape}')
 
-        attn_applied = torch.bmm(attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
-
-        output = torch.cat((embedded[0], attn_applied[0], av_emb), 1)
+        output = torch.cat((embedded[0], text_attn_applied[0], av_attn_applied [0]), 1)
         output = self.attn_combine(output).unsqueeze(0)
 
         output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
 
         output = self.out_layer(output[0])
-        return output, hidden, attn_weights
+        return output, hidden, text_attn_weights, av_attn_weights
     
     def initialise_weights (self):
         for param in self.lstm.parameters():
