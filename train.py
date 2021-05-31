@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    av_enc_model = AudioVideoEncoder (download_pretrained=True)
+    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.av_conv_dim)
     # av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \

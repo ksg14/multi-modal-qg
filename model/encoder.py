@@ -107,12 +107,12 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, in_channels, kernel_sz, stride, hidden_dim, conv_dim):
+    def __init__(self, av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, av_conv_dim):
         super().__init__()
 
         self.audio_enc = AudioEncoder ()
         # self.video_enc = VideoEncoder (download_pretrained)
-        self.video_enc = VideoConvLstmEncoder (in_channels, kernel_sz, stride, hidden_dim, conv_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, av_conv_dim)
 
     def forward (self, audio_file, video_frames):
         audio_out = self.audio_enc (audio_file)
