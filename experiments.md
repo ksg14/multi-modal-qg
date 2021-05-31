@@ -29,3 +29,10 @@
 * 3 layer lstm with dropout
 * Attention on context words
 * Backprop to audio and video encoder
+
+### Exp-7 :
+
+* Conv-LSTM based video encoder
+* 3 layer lstm with dropout
+* Attention on video frames
+* Attention on context words
