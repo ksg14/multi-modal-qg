@@ -201,7 +201,8 @@ if __name__ == '__main__':
 									word_emb_dim=emb_dim, \
 									av_emb_dim=config.av_emb, \
 									emb_layer=emb_layer, \
-									max_length=config.context_max_lenth, \
+									text_max_length=config.context_max_lenth, \
+                        			av_max_length=config.av_max_length,
 									device=device)
 		
 		if args.last:
@@ -214,7 +215,7 @@ if __name__ == '__main__':
 		text_enc_model.to (device)
 		dec_model.to (device)
 
-		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.question_max_length, args.strategy, device)
+		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.av_max_length, config.question_max_length, args.strategy, device)
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
