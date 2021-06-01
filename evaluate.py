@@ -166,18 +166,18 @@ if __name__ == '__main__':
 		test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
 
 		if args.last:
-			weights_matrix = torch.load (config.output_path / 'last_weigths.pt')
+			weights_matrix = torch.load (config.output_path / 'last_weigths.pt', map_location=device)
 		else:
-			weights_matrix = torch.load (config.learned_weight_path)
+			weights_matrix = torch.load (config.learned_weight_path, map_location=device)
 	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-		av_enc_model = AudioVideoEncoder (download_pretrained=False)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
 		
 		if args.last:
-			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth'))
+			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth'), map_location=device)
 		else:
-			av_enc_model.load_state_dict(torch.load(config.av_model_path))
+			av_enc_model.load_state_dict(torch.load(config.av_model_path), map_location=device)
 		
 		av_enc_model.eval ()
 
@@ -189,9 +189,9 @@ if __name__ == '__main__':
 										device=device)
 
 		if args.last:
-			text_enc_model.load_state_dict(torch.load(config.output_path / 'last_text_enc.pth'))
+			text_enc_model.load_state_dict(torch.load(config.output_path / 'last_text_enc.pth'), map_location=device)
 		else:
-			text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
+			text_enc_model.load_state_dict(torch.load(config.text_enc_model_path), map_location=device)
 		text_enc_model.eval()
 
 		dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
@@ -205,9 +205,9 @@ if __name__ == '__main__':
 									device=device)
 		
 		if args.last:
-			dec_model.load_state_dict(torch.load(config.output_path / 'last_decoder.pth'))
+			dec_model.load_state_dict(torch.load(config.output_path / 'last_decoder.pth'), map_location=device)
 		else:
-			dec_model.load_state_dict(torch.load(config.dec_model_path))
+			dec_model.load_state_dict(torch.load(config.dec_model_path), map_location=device)
 		dec_model.eval ()
 
 		av_enc_model.to (device)
