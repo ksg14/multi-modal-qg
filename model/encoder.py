@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Module, LSTM, Linear, Dropout, GRU, Embedding, Conv2d, MaxPool2d, AdaptiveAvgPool1d, BatchNorm2d, Flatten
-# import torch.nn.functional as F
+import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
 import torchvision.models as models
@@ -61,10 +61,10 @@ class VideoConvLstmEncoder (Module):
         height = video_frames.shape [3]
         width = video_frames.shape [4]
 
-        first_pass = self.maxpool1 (self.bn2 (self.conv2 (self.bn1 (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))
-        second_pass = self.maxpool2 (self.bn4 (self.conv4 (self.bn3 (self.conv3 (first_pass)))))
+        first_block = self.maxpool1 (self.bn2 (F.relu (self.conv2 (self.bn1 (F.relu (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))))
+        second_block = self.maxpool2 (self.bn4 (F.relu (self.conv4 (self.bn3 (F.relu (self.conv3 (first_block)))))))
 
-        cnn_out = self.flatten (second_pass)
+        cnn_out = self.flatten (second_block)
 
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
