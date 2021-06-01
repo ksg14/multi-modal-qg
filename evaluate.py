@@ -52,7 +52,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				av_enc_out = av_enc_model (audio_file [0], frames)
 
 				n_frames = av_enc_out.shape [0]
-                padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
+				padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
 				all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
@@ -119,11 +119,10 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
 				tepoch.set_postfix (val_bleu=val_bleu)
 
-	val_loss /= n_len
-    val_bleu /= n_len
-    val_bleu_1 /= n_len 
-    val_bleu_2 /= n_len
-    val_bleu_3 /= n_len
+	val_bleu /= n_len
+	val_bleu_1 /= n_len 
+	val_bleu_2 /= n_len
+	val_bleu_3 /= n_len
 	print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
 	return predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
