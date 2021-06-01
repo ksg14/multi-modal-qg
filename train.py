@@ -86,9 +86,6 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
 
-                text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
-
                 for ei in range (context_len):
                     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
                     all_enc_outputs [ei] = enc_output [0, 0]
@@ -120,11 +117,12 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 val_bleu += sentence_bleu (question_str_list, pred_words)
                 tepoch.set_postfix (val_loss=val_loss, val_bleu=val_bleu)
     
-    val_loss /= n_len
+    val_loss = val_loss.item () / n_len
     val_bleu /= n_len
     val_bleu_1 /= n_len 
     val_bleu_2 /= n_len
     val_bleu_3 /= n_len
+
     print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
     return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
@@ -184,7 +182,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
                 # break
         # break
-        val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, context_max_len, pred_max_len, device)
+        val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, context_max_len, av_max_len, pred_max_len, device)
         epoch_stats ['val']['loss'].append (val_loss)
         epoch_stats ['val']['bleu'].append (val_bleu)
         epoch_stats ['val']['bleu_1'].append (val_bleu_1)
@@ -265,7 +263,7 @@ if __name__ == '__main__':
 
     epoch_stats, best_epoch = train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, config.epochs, device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
 
-    validate (av_enc_model, text_enc_model, dec_model, val_dataloader, config.context_max_lenth, config.question_max_length, device)
+    # validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, config.context_max_lenth, config.av_max_length, config.question_max_length, device)
     
     print (f'Best epoch - {best_epoch} !')
 
