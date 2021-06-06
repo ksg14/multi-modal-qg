@@ -31,13 +31,13 @@ def create_emb_layer (weights_matrix, non_trainable):
 		emb_layer.weight.requires_grad = False
 	return emb_layer, num_embeddings, embedding_dim
 
-def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, pred_max_len, strategy, device):
+def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_len, av_max_len, pred_max_len, strategy, device):
 	# val_loss = 0.0
 	val_bleu = 0.0
 	val_bleu_1 = 0.0
 	val_bleu_2 = 0.0
 	val_bleu_3 = 0.0
-	val_bleu_4 = 0.0
+	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 
 	predictions = []
@@ -47,9 +47,12 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 			for frames, audio_file, context_tensor, question_id, question, target, context_len, target_len in tepoch:
 				frames, audio_file, context_tensor, question_id, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question_id, question, target.to (device), context_len.to (device), target_len.to (device)
 				
-				tepoch.set_description (f'Validating ...')
+				tepoch.set_description (f'Evaluating ...')
 
 				av_enc_out = av_enc_model (audio_file [0], frames)
+
+				n_frames = av_enc_out.shape [0]
+				padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
 				all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
@@ -65,7 +68,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				pred_words = []
 
 				for di in range(pred_max_len):
-					dec_output, dec_hidden, dec_attention = dec_model (dec_input, context_len, av_enc_out, dec_hidden, all_enc_outputs)
+					dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, n_frames, context_len, padded_av_out, dec_hidden, all_enc_outputs)
 					# loss += criterion (dec_output, target [0][di].view (-1))
 					
 					if strategy == 'greedy':
@@ -105,7 +108,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
 				val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
 				val_bleu_3 += sentence_bleu (question_str_list, pred_words, weights=(0.33, 0.33, 0.33, 0))
-				val_bleu_4 += sentence_bleu (question_str_list, pred_words)
+				# val_bleu_4 += sentence_bleu (question_str_list, pred_words)
 				val_bleu += sentence_bleu (question_str_list, pred_words)
 				
 				predictions.append ({
@@ -116,8 +119,12 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 
 				tepoch.set_postfix (val_bleu=val_bleu)
 
+	val_bleu /= n_len
+	val_bleu_1 /= n_len 
+	val_bleu_2 /= n_len
+	val_bleu_3 /= n_len
 	print (f'Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
-	return predictions, val_bleu / n_len, val_bleu_1 / n_len, val_bleu_2 / n_len, val_bleu_3 / n_len, val_bleu_4 / n_len 
+	return predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Evaluate model')
@@ -147,7 +154,7 @@ if __name__ == '__main__':
 		config = None
 
 	if config:
-		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+		device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 		print(f'Device - {device}')
 
 		# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
@@ -159,18 +166,18 @@ if __name__ == '__main__':
 		test_dataloader = DataLoader (test_dataset, batch_size=1, shuffle=False)
 
 		if args.last:
-			weights_matrix = torch.load (config.output_path / 'last_weigths.pt')
+			weights_matrix = torch.load (config.output_path / 'last_weigths.pt', map_location=device)
 		else:
-			weights_matrix = torch.load (config.learned_weight_path)
+			weights_matrix = torch.load (config.learned_weight_path, map_location=device)
 	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-		av_enc_model = AudioVideoEncoder (download_pretrained=False)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
 		
 		if args.last:
-			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth'))
+			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
 		else:
-			av_enc_model.load_state_dict(torch.load(config.av_model_path))
+			av_enc_model.load_state_dict(torch.load(config.av_model_path, map_location=device))
 		
 		av_enc_model.eval ()
 
@@ -182,9 +189,9 @@ if __name__ == '__main__':
 										device=device)
 
 		if args.last:
-			text_enc_model.load_state_dict(torch.load(config.output_path / 'last_text_enc.pth'))
+			text_enc_model.load_state_dict(torch.load(config.output_path / 'last_text_enc.pth', map_location=device))
 		else:
-			text_enc_model.load_state_dict(torch.load(config.text_enc_model_path))
+			text_enc_model.load_state_dict(torch.load(config.text_enc_model_path, map_location=device))
 		text_enc_model.eval()
 
 		dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
@@ -192,22 +199,23 @@ if __name__ == '__main__':
 									hidden_dim=config.dec_lstm_hidden_dim, \
 									n_vocab=n_vocab, \
 									word_emb_dim=emb_dim, \
-									av_emb_dim=config.av_emb, \
+									av_emb_dim=config.av_hidden_dim, \
 									emb_layer=emb_layer, \
-									max_length=config.context_max_lenth, \
+									text_max_length=config.context_max_lenth, \
+                        			av_max_length=config.av_max_length,
 									device=device)
 		
 		if args.last:
-			dec_model.load_state_dict(torch.load(config.output_path / 'last_decoder.pth'))
+			dec_model.load_state_dict(torch.load(config.output_path / 'last_decoder.pth', map_location=device))
 		else:
-			dec_model.load_state_dict(torch.load(config.dec_model_path))
+			dec_model.load_state_dict(torch.load(config.dec_model_path, map_location=device))
 		dec_model.eval ()
 
 		av_enc_model.to (device)
 		text_enc_model.to (device)
 		dec_model.to (device)
 
-		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3, val_bleu_4  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.question_max_length, args.strategy, device)
+		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.av_max_length, config.question_max_length, args.strategy, device)
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'

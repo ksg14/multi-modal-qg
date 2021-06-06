@@ -16,7 +16,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-6/')
+    output_path = Path (r'results/exp-7.1/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model.pth'
     dec_model_path = output_path / 'dec_model.pth'
@@ -68,6 +68,13 @@ class Config():
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
     context_max_lenth = 283
+    av_max_length = 101
+    # Video encoder
+    av_in_channels = 3
+    av_kernel_sz = 3
+    av_stride = 1
+    av_hidden_dim = 512
+    flatten_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
     text_lstm_layers = 3
