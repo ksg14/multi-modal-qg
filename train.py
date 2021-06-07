@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    # av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
+    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim)
     # av_enc_model.eval ()
 
     text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
@@ -246,7 +246,8 @@ if __name__ == '__main__':
                         hidden_dim=config.dec_lstm_hidden_dim, \
                         n_vocab=n_vocab, \
                         word_emb_dim=emb_dim, \
-                        av_emb_dim=config.av_hidden_dim, \
+                        video_emb_dim=config.video_hidden_dim, \
+                        audio_emb_dim=config.audio_emb, \
                         emb_layer=emb_layer, \
                         text_max_length=config.context_max_lenth, \
                         av_max_length=config.av_max_length, \
@@ -290,4 +291,3 @@ if __name__ == '__main__':
     # print (f'mem av - {get_mem_usage (av_enc_model)} MB')
     # print (f'mem text enc - {get_mem_usage (text_enc_model)} MB')
     # print (f'mem dec - {get_mem_usage (dec_model)} MB')
-
