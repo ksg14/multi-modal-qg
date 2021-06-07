@@ -65,7 +65,7 @@ class AttnDecoder (Module):
         self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
+        self.lstm = LSTM (self.word_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()
