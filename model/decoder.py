@@ -115,5 +115,5 @@ class AttnDecoder (Module):
         # normal_ (self.attn_combine.bias)
     
     def init_state(self, batch_sz):
-        return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim),
-                torch.zeros(self.num_layers, batch_sz, self.hidden_dim))
+        return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
+                torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
