@@ -63,7 +63,7 @@ class AttnDecoder (Module):
 
         self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
         self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
-        self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
+        # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
         self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
@@ -95,7 +95,7 @@ class AttnDecoder (Module):
         output = torch.cat((embedded[0], text_attn_applied[0], audio_emb [0], vid_attn_applied [0]), 1)
         # output = self.attn_combine(output).unsqueeze(0)
         output = output.unsqueeze (0)
-        
+
         print (f'out shape - {output.shape}')
 
         # output = F.relu(output)
@@ -117,5 +117,5 @@ class AttnDecoder (Module):
         normal_ (self.text_attn.bias)
         xavier_uniform_ (self.vid_attn.weight)
         normal_ (self.vid_attn.bias)
-        xavier_uniform_ (self.attn_combine.weight)
-        normal_ (self.attn_combine.bias)
+        # xavier_uniform_ (self.attn_combine.weight)
+        # normal_ (self.attn_combine.bias)
