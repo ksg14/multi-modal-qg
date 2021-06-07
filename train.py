@@ -83,21 +83,21 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 n_frames = video_emb.shape [0]
                 padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
-                text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
+                # text_enc_hidden = text_enc_model.init_state (1)
+                # all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
 
-                for ei in range (context_len):
-                    enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
-                    all_enc_outputs [ei] = enc_output [0, 0]
+                # for ei in range (context_len):
+                #     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
+                #     all_enc_outputs [ei] = enc_output [0, 0]
 
                 loss = 0
                 dec_input = torch.tensor([[dataloader.dataset.vocab ['<start>']]]).to (device)
-                dec_hidden = text_enc_hidden
+                dec_hidden = dec_model.init_state (1)
 
                 pred_words = []
 
                 for di in range(target_len):
-                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, None)
                     
                     loss += criterion (dec_output, target [0][di].view (-1))
 
@@ -154,20 +154,20 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 n_frames = video_emb.shape [0]
                 padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
-                text_enc_hidden = text_enc_model.init_state (1)
-                all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
+                # text_enc_hidden = text_enc_model.init_state (1)
+                # all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
 
                 loss = 0
 
-                for ei in range (context_len):
-                    enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
-                    all_enc_outputs [ei] = enc_output [0, 0]
+                # for ei in range (context_len):
+                #     enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
+                #     all_enc_outputs [ei] = enc_output [0, 0]
 
                 dec_input = torch.tensor([[train_dataloader.dataset.vocab ['<start>']]]).to (device)
-                dec_hidden = text_enc_hidden
+                dec_hidden = dec_model.init_state (1)
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, None)
 
                     loss += criterion (dec_output, target [0][di].view (-1))
                     dec_input = target [0] [di]  # Teacher forcing
@@ -199,7 +199,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
             print ('Saving new best model !')
             save_model (av_enc_model, config.av_model_path)
-            save_model (text_enc_model, config.text_enc_model_path)
+            # save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
             save_weights (dec_model.emb_layer, config.learned_weight_path)
         
@@ -207,7 +207,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         if epoch == n_epochs-1:
             print ('Saving last epoch model !')
             save_model (av_enc_model, config.output_path / 'last_av_model.pth')
-            save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
+            # save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
             save_model (dec_model, config.output_path / 'last_decoder.pth')
             save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pt')
 
@@ -236,12 +236,12 @@ if __name__ == '__main__':
     av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim)
     # av_enc_model.eval ()
 
-    text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
-                        dropout_p=config.text_lstm_dropout, \
-                        hidden_dim=config.text_lstm_hidden_dim, \
-                        emb_dim=emb_dim, \
-                        emb_layer=emb_layer, \
-                        device=device)
+    # text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
+    #                     dropout_p=config.text_lstm_dropout, \
+    #                     hidden_dim=config.text_lstm_hidden_dim, \
+    #                     emb_dim=emb_dim, \
+    #                     emb_layer=emb_layer, \
+    #                     device=device)
     
     dec_model = AttnDecoder (num_layers=config.dec_lstm_layers, \
                         dropout_p=config.dec_lstm_dropout, \
@@ -256,17 +256,17 @@ if __name__ == '__main__':
                         device=device)
 
     av_enc_model.to (device)
-    text_enc_model.to (device)
+    # text_enc_model.to (device)
     dec_model.to (device)
 
     criterion = CrossEntropyLoss()
     av_enc_optimizer = Adam(av_enc_model.parameters(), lr=config.lr)
-    text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
+    # text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
+    epoch_stats, best_epoch = train (av_enc_model=av_enc_model, text_enc_model=None, dec_model=dec_model, \
                                     train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-                                    av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
+                                    av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=None, \
                                     dec_optimizer=dec_optimizer, criterion=criterion, n_epochs=config.epochs, \
                                     device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
 
