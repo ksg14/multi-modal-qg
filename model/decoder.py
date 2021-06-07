@@ -74,7 +74,7 @@ class AttnDecoder (Module):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
         print (f'audio emb - {audio_emb.shape}')
-        print (f'audio emb - {video_emb.shape}')
+        print (f'video emb - {video_emb.shape}')
         print (f'word - {embedded.shape}')
 
         # Text attention
@@ -92,7 +92,7 @@ class AttnDecoder (Module):
         print (f'text attn - {text_attn_applied.shape}')
         print (f'vid attn - {vid_attn_applied.shape}')
 
-        output = torch.cat((embedded[0], text_attn_applied[0], audio_emb [0], vid_attn_applied [0]), 1)
+        output = torch.cat((embedded[0], text_attn_applied[0], audio_emb, vid_attn_applied [0]), 1)
         # output = self.attn_combine(output).unsqueeze(0)
         output = output.unsqueeze (0)
 
