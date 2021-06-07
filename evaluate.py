@@ -49,10 +49,10 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				
 				tepoch.set_description (f'Evaluating ...')
 
-				# av_enc_out = av_enc_model (audio_file [0], frames)
+				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-				# n_frames = av_enc_out.shape [0]
-				# padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
+				n_frames = video_emb.shape [0]
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
 				all_enc_outputs = torch.zeros(context_max_len, text_enc_model.hidden_dim).to (device)
@@ -68,7 +68,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				pred_words = []
 
 				for di in range(pred_max_len):
-					dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, None, context_len, None, dec_hidden, all_enc_outputs)
+					dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
 					# loss += criterion (dec_output, target [0][di].view (-1))
 					
 					if strategy == 'greedy':
@@ -172,14 +172,14 @@ if __name__ == '__main__':
 	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-		# av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
 		
-		# if args.last:
-		# 	av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
-		# else:
-		# 	av_enc_model.load_state_dict(torch.load(config.av_model_path, map_location=device))
+		if args.last:
+			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
+		else:
+			av_enc_model.load_state_dict(torch.load(config.av_model_path, map_location=device))
 		
-		# av_enc_model.eval ()
+		av_enc_model.eval ()
 
 		text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
 										dropout_p=config.text_lstm_dropout, \
@@ -211,11 +211,11 @@ if __name__ == '__main__':
 			dec_model.load_state_dict(torch.load(config.dec_model_path, map_location=device))
 		dec_model.eval ()
 
-		# av_enc_model.to (device)
+		av_enc_model.to (device)
 		text_enc_model.to (device)
 		dec_model.to (device)
 
-		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3  = evaluate (None, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.av_max_length, config.question_max_length, args.strategy, device)
+		predictions, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3  = evaluate (av_enc_model, text_enc_model, dec_model, test_dataloader, config.context_max_lenth, config.av_max_length, config.question_max_length, args.strategy, device)
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
