@@ -73,10 +73,6 @@ class AttnDecoder (Module):
     def forward(self, word, enc_frames, enc_seq_len, audio_emb, video_emb, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
-        print (f'audio emb - {audio_emb.shape}')
-        print (f'video emb - {video_emb.shape}')
-        print (f'word - {embedded.shape}')
-
         # Text attention
         text_attn_pre_soft = self.text_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
         text_attn_pre_soft [enc_seq_len:] = float ('-inf')
@@ -89,14 +85,9 @@ class AttnDecoder (Module):
         vid_attn_weights = F.softmax(vid_attn_pre_soft, dim=1)
         vid_attn_applied = torch.bmm(vid_attn_weights.unsqueeze(0), video_emb.unsqueeze(0))
 
-        print (f'text attn - {text_attn_applied.shape}')
-        print (f'vid attn - {vid_attn_applied.shape}')
-
         output = torch.cat((embedded[0], text_attn_applied[0], audio_emb, vid_attn_applied [0]), 1)
         # output = self.attn_combine(output).unsqueeze(0)
         output = output.unsqueeze (0)
-
-        print (f'out shape - {output.shape}')
 
         # output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
