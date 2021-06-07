@@ -87,9 +87,10 @@ class AttnDecoder (Module):
 
         # output = torch.cat((embedded[0], text_attn_applied[0], av_attn_applied [0]), 1)
         output = torch.cat((embedded[0], text_attn_applied[0]), 1)
-        output = self.attn_combine(output).unsqueeze(0)
+        # output = self.attn_combine(output).unsqueeze(0)
+        output = output.unsqueeze(0)
 
-        output = F.relu(output)
+        # output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
 
         output = self.out_layer(output[0])
