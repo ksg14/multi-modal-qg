@@ -68,7 +68,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
     n_len = len (dataloader)
     
     av_enc_model.eval () 
-    text_enc_model.eval ()
+    # text_enc_model.eval ()
     dec_model.eval ()
 
     with torch.no_grad ():
@@ -136,7 +136,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
         av_enc_model.train ()
-        text_enc_model.train ()
+        # text_enc_model.train ()
         dec_model.train ()
 
         with tqdm(train_dataloader) as tepoch:
@@ -146,7 +146,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 tepoch.set_description (f'Epoch {epoch}')
 
                 av_enc_optimizer.zero_grad()
-                text_enc_optimizer.zero_grad ()
+                # text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
                 audio_emb, video_emb = av_enc_model (audio_file [0], frames)
@@ -175,7 +175,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 loss.backward()
 
                 av_enc_optimizer.step()
-                text_enc_optimizer.step ()
+                # text_enc_optimizer.step ()
                 dec_optimizer.step()
 
                 with torch.no_grad():
