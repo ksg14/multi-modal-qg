@@ -78,10 +78,10 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 
                 tepoch.set_description (f'Validating ...')
 
-                av_enc_out = av_enc_model (audio_file [0], frames)
+                audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-                n_frames = av_enc_out.shape [0]
-                padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
+                n_frames = video_emb.shape [0]
+                padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
@@ -97,7 +97,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 pred_words = []
 
                 for di in range(target_len):
-                    dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, n_frames, context_len, padded_av_out, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
                     loss += criterion (dec_output, target [0][di].view (-1))
 
                     # Greedy
@@ -148,10 +148,10 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
-                av_enc_out = av_enc_model (audio_file [0], frames)
+                audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-                n_frames = av_enc_out.shape [0]
-                padded_av_out = F.pad (av_enc_out, (0, 0, 0, av_max_len-n_frames))
+                n_frames = video_emb.shape [0]
+                padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
                 text_enc_hidden = text_enc_model.init_state (1)
                 all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
@@ -166,7 +166,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 dec_hidden = text_enc_hidden
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, text_attn, av_attn = dec_model (dec_input, n_frames, context_len, padded_av_out, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
                     loss += criterion (dec_output, target [0][di].view (-1))
                     dec_input = target [0] [di]  # Teacher forcing
 
