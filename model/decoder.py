@@ -47,7 +47,7 @@ class Decoder (Module):
         normal_ (self.out_layer.bias)
 
 class AttnDecoder (Module):
-    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer, text_max_length, av_max_length, device):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, video_emb_dim, audio_emb_dim, emb_layer, text_max_length, av_max_length, device):
         super(AttnDecoder, self).__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
@@ -55,21 +55,22 @@ class AttnDecoder (Module):
         self.dropout_p = dropout_p
         self.text_max_length = text_max_length
         self.av_max_length = av_max_length
-        self.av_emb_dim = av_emb_dim
+        self.video_emb_dim = video_emb_dim
+        self.audio_emb_dim = audio_emb_dim
         self.word_emb_dim = word_emb_dim
         self.emb_layer = emb_layer
         self.device = device
 
         self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
-        self.av_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
+        self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.hidden_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
+        self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()
 
-    def forward(self, word, enc_frames, enc_seq_len, av_emb, hidden, encoder_outputs):
+    def forward(self, word, enc_frames, enc_seq_len, audio_emb, video_emb, hidden, encoder_outputs):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
         # Text attention
@@ -79,19 +80,20 @@ class AttnDecoder (Module):
         text_attn_applied = torch.bmm(text_attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
 
         # Video attention
-        av_attn_pre_soft = self.av_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
-        av_attn_pre_soft [enc_frames:] = float ('-inf')
-        av_attn_weights = F.softmax(av_attn_pre_soft, dim=1)
-        av_attn_applied = torch.bmm(av_attn_weights.unsqueeze(0), av_emb.unsqueeze(0))
+        vid_attn_pre_soft = self.vid_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
+        vid_attn_pre_soft [enc_frames:] = float ('-inf')
+        vid_attn_weights = F.softmax(vid_attn_pre_soft, dim=1)
+        vid_attn_applied = torch.bmm(vid_attn_weights.unsqueeze(0), video_emb.unsqueeze(0))
 
-        output = torch.cat((embedded[0], text_attn_applied[0], av_attn_applied [0]), 1)
-        output = self.attn_combine(output).unsqueeze(0)
+        output = torch.cat((embedded[0], text_attn_applied[0], audio_emb [0], vid_attn_applied [0]), 1)
+        # output = self.attn_combine(output).unsqueeze(0)
+        output = output.unsqueeze (0)
 
-        output = F.relu(output)
+        # output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
 
         output = self.out_layer(output[0])
-        return output, hidden, text_attn_weights, av_attn_weights
+        return output, hidden, text_attn_weights, vid_attn_weights
     
     def initialise_weights (self):
         for param in self.lstm.parameters():
@@ -104,7 +106,7 @@ class AttnDecoder (Module):
         normal_ (self.out_layer.bias)
         xavier_uniform_ (self.text_attn.weight)
         normal_ (self.text_attn.bias)
-        xavier_uniform_ (self.av_attn.weight)
-        normal_ (self.av_attn.bias)
+        xavier_uniform_ (self.vid_attn.weight)
+        normal_ (self.vid_attn.bias)
         xavier_uniform_ (self.attn_combine.weight)
         normal_ (self.attn_combine.bias)
