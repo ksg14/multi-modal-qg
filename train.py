@@ -67,7 +67,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
     # val_bleu_4 = 0.0
     n_len = len (dataloader)
     
-    # av_enc_model.eval () 
+    av_enc_model.eval () 
     text_enc_model.eval ()
     dec_model.eval ()
 
@@ -135,7 +135,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
     for epoch in range (n_epochs):
         epoch_stats ['train']['loss'].append (0.0)
-        # av_enc_model.train ()
+        av_enc_model.train ()
         text_enc_model.train ()
         dec_model.train ()
 
@@ -145,7 +145,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
-                # av_enc_optimizer.zero_grad()
+                av_enc_optimizer.zero_grad()
                 text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
 
@@ -174,7 +174,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
                 loss.backward()
 
-                # av_enc_optimizer.step()
+                av_enc_optimizer.step()
                 text_enc_optimizer.step ()
                 dec_optimizer.step()
 
@@ -198,7 +198,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
             best_epoch = epoch
 
             print ('Saving new best model !')
-            # save_model (av_enc_model, config.av_model_path)
+            save_model (av_enc_model, config.av_model_path)
             save_model (text_enc_model, config.text_enc_model_path)
             save_model (dec_model, config.dec_model_path)
             save_weights (dec_model.emb_layer, config.learned_weight_path)
@@ -206,7 +206,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
         # Save last epoch model
         if epoch == n_epochs-1:
             print ('Saving last epoch model !')
-            # save_model (av_enc_model, config.output_path / 'last_av_model.pth')
+            save_model (av_enc_model, config.output_path / 'last_av_model.pth')
             save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
             save_model (dec_model, config.output_path / 'last_decoder.pth')
             save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pt')
@@ -255,18 +255,18 @@ if __name__ == '__main__':
                         av_max_length=config.av_max_length, \
                         device=device)
 
-    # av_enc_model.to (device)
+    av_enc_model.to (device)
     text_enc_model.to (device)
     dec_model.to (device)
 
     criterion = CrossEntropyLoss()
-    # av_enc_optimizer = Adam(av_enc_model.parameters(), lr=config.lr)
+    av_enc_optimizer = Adam(av_enc_model.parameters(), lr=config.lr)
     text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
     dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-    epoch_stats, best_epoch = train (av_enc_model=None, text_enc_model=text_enc_model, dec_model=dec_model, \
+    epoch_stats, best_epoch = train (av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
                                     train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-                                    av_enc_optimizer=None, text_enc_optimizer=text_enc_optimizer, \
+                                    av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
                                     dec_optimizer=dec_optimizer, criterion=criterion, n_epochs=config.epochs, \
                                     device=device, context_max_len=config.context_max_lenth, av_max_len=config.av_max_length, pred_max_len=config.question_max_length)
 
