@@ -63,6 +63,7 @@ class AttnDecoder (Module):
 
         self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
         self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
+        self.audio_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
         self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
@@ -85,7 +86,17 @@ class AttnDecoder (Module):
         vid_attn_weights = F.softmax(vid_attn_pre_soft, dim=1)
         vid_attn_applied = torch.bmm(vid_attn_weights.unsqueeze(0), video_emb.unsqueeze(0))
 
-        output = torch.cat((embedded[0], text_attn_applied[0], audio_emb, vid_attn_applied [0]), 1)
+        print (f'audio_emb - {audio_emb.shape}')
+
+        # Audio attention
+        audio_attn_pre_soft = self.audio_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
+        audio_attn_pre_soft [enc_frames:] = float ('-inf')
+        audio_attn_weights = F.softmax(audio_attn_pre_soft, dim=1)
+        audio_attn_applied = torch.bmm(audio_attn_weights.unsqueeze(0), audio_emb.unsqueeze(0))
+
+        print (f'audio_attn_applied {audio_attn_applied.shape}')
+
+        output = torch.cat((embedded[0], text_attn_applied[0], audio_attn_applied [0], vid_attn_applied [0]), 1)
         # output = self.attn_combine(output).unsqueeze(0)
         output = output.unsqueeze (0)
 
@@ -93,7 +104,7 @@ class AttnDecoder (Module):
         output, hidden = self.lstm (output, hidden)
 
         output = self.out_layer(output[0])
-        return output, hidden, text_attn_weights, vid_attn_weights
+        return output, hidden, text_attn_weights, audio_attn_weights, vid_attn_weights
     
     def initialise_weights (self):
         for param in self.lstm.parameters():
@@ -106,6 +117,8 @@ class AttnDecoder (Module):
         normal_ (self.out_layer.bias)
         xavier_uniform_ (self.text_attn.weight)
         normal_ (self.text_attn.bias)
+        xavier_uniform_ (self.audio_attn.weight)
+        normal_ (self.audio_attn.bias)
         xavier_uniform_ (self.vid_attn.weight)
         normal_ (self.vid_attn.bias)
         # xavier_uniform_ (self.attn_combine.weight)

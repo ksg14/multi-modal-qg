@@ -81,6 +81,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
                 n_frames = video_emb.shape [0]
+                padded_audio_emb = F.pad (audio_emb, (0, 0, 0, av_max_len-n_frames))
                 padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
                 text_enc_hidden = text_enc_model.init_state (1)
@@ -97,7 +98,7 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
                 pred_words = []
 
                 for di in range(target_len):
-                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, audio_attn, vid_attn = dec_model (dec_input, n_frames, context_len, padded_audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
                     
                     loss += criterion (dec_output, target [0][di].view (-1))
 
@@ -152,6 +153,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
                 n_frames = video_emb.shape [0]
+                padded_audio_emb = F.pad (audio_emb, (0, 0, 0, av_max_len-n_frames))
                 padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-n_frames))
 
                 text_enc_hidden = text_enc_model.init_state (1)
@@ -167,7 +169,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 dec_hidden = text_enc_hidden
 
                 for di in range (target_len):
-                    dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
+                    dec_output, dec_hidden, text_attn, audio_attn, vid_attn = dec_model (dec_input, n_frames, context_len, padded_audio_emb, padded_video_emb, dec_hidden, all_enc_outputs)
 
                     loss += criterion (dec_output, target [0][di].view (-1))
                     dec_input = target [0] [di]  # Teacher forcing

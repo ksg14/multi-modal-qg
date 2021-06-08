@@ -15,8 +15,8 @@ class AudioEncoder (Module):
 
     def forward (self, audio_file):
         out = self.vggish.forward (audio_file)
-        embeddings = self.adapt_avg_pool (out.view (1, out.shape [1], -1))
-        return embeddings
+        # embeddings = self.adapt_avg_pool (out.view (1, out.shape [1], -1))
+        return out
 
 class VideoResnetEncoder (Module):
     def __init__ (self, download_pretrained=False):
