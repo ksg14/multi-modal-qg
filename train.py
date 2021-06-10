@@ -146,7 +146,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
-                print (f'audio file - {audio_file}')
+                print (f'audio file - {audio_file [0]}')
 
                 av_enc_optimizer.zero_grad()
                 # text_enc_optimizer.zero_grad ()
@@ -237,7 +237,7 @@ if __name__ == '__main__':
 
     emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)    
 
-    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, reload_vgg=True)		
+    av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, reload_vgg=False)		
     av_enc_model.load_state_dict(torch.load(config.pretrained_av_model, map_location=device))
 
     # text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
