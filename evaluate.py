@@ -173,7 +173,7 @@ if __name__ == '__main__':
 	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim, reload_vgg=False)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim, device=device)
 		
 		if args.last:
 			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
