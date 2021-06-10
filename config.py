@@ -86,6 +86,8 @@ class Config():
     dec_lstm_dropout = 0.2
     
     # checkpoints
+    pretrained_models = Path (r'pretrained_models')
+    pretrained_av_model = pretrained_models / 'av_model.pth'
     best_epoch = None
 
     def save_config (self):

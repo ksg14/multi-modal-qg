@@ -10,8 +10,8 @@ class AudioEncoder (Module):
         super().__init__()
         
         self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', postprocess=False)
-        self.adapt_avg_pool = AdaptiveAvgPool1d(1)
-        # self.fc1 = Linear (128, audio_emb) 
+        # self.adapt_avg_pool = AdaptiveAvgPool1d(1)
+        # self.fc1 = Linear (128, audio_emb)
 
     def forward (self, audio_file):
         out = self.vggish.forward (audio_file)
@@ -120,8 +120,8 @@ class AudioVideoEncoder (Module):
 
     def forward (self, audio_file, video_frames):
         audio_out = self.audio_enc (audio_file)
-        audio_emb = audio_out.view (1, -1)
-        # print (audio_emb.shape)
+        # audio_emb = audio_out.view (1, -1)
+        print (audio_out.shape)
 
         # video_emb = self.video_enc (video_frames).squeeze ()
         # print (f'video emb shape - {video_emb.shape}')
@@ -129,4 +129,4 @@ class AudioVideoEncoder (Module):
         # enc_output = torch.cat ((audio_emb, video_emb), dim=1)
 
         # return audio_emb, video_emb
-        return audio_emb, None
+        return audio_out, None
