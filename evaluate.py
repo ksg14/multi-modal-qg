@@ -155,7 +155,7 @@ if __name__ == '__main__':
 		config = None
 
 	if config:
-		device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+		device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 		print(f'Device - {device}')
 
 		# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))

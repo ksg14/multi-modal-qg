@@ -220,7 +220,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 if __name__ == '__main__':
     config = Config ()
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     print(f'Device - {device}')
 
     weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
