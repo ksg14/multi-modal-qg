@@ -146,8 +146,6 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
                 
                 tepoch.set_description (f'Epoch {epoch}')
 
-                print (f'audio file - {audio_file [0]}')
-
                 av_enc_optimizer.zero_grad()
                 # text_enc_optimizer.zero_grad ()
                 dec_optimizer.zero_grad()
