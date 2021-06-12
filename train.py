@@ -26,22 +26,6 @@ from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Nor
 import warnings
 warnings.filterwarnings('ignore')
 
-def create_emb_layer (weights_matrix, non_trainable):
-	num_embeddings, embedding_dim = weights_matrix.size()
-	emb_layer = Embedding(num_embeddings, embedding_dim)
-	emb_layer.load_state_dict({'weight': weights_matrix})
-	if non_trainable:
-		emb_layer.weight.requires_grad = False
-	return emb_layer, num_embeddings, embedding_dim
-
-def save_weights (emb_layer, weight_path):
-	try:
-		torch.save(emb_layer.weight, weight_path)
-		print (f'Emb Weights saved to {weight_path}')
-	except Exception:
-		print (f'unable to save weights {str (Exception)}')
-	return
-
 def save_model (model, model_path):
 	try:
 		torch.save(model.state_dict(), model_path)
@@ -56,18 +40,12 @@ def get_mem_usage (model):
 	mem_usage = (mem_params + mem_bufs) / (1024 * 1024)
 	return mem_usage
 
-def repackage_hidden(h):
-	if isinstance(h, torch.Tensor):
-		return h.detach()
-	else:
-		return tuple(repackage_hidden(v) for v in h)
-
 def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader, device):
 	val_loss = 0.0
-	val_bleu = 0.0
-	val_bleu_1 = 0.0
-	val_bleu_2 = 0.0
-	val_bleu_3 = 0.0
+	# val_bleu = 0.0
+	# val_bleu_1 = 0.0
+	# val_bleu_2 = 0.0
+	# val_bleu_3 = 0.0
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 		
@@ -81,6 +59,69 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
 				
 				tepoch.set_description (f'Validating...')
+
+				if args.logs:
+					print (f'frames - {frames.shape}')
+					print (f'context - {context.shape}')
+					print (f'question src - {question_src.shape}')
+					print (f'question tgt - {question_tgt.shape}')
+
+				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
+
+				enc_hidden_state, enc_attn = text_enc_model (context)
+				
+				if args.logs:
+					print (f'audio emb - {audio_emb.shape}')
+					print (f'video emb - {video_emb.shape}')
+					print (f'enc hidden - {enc_hidden_state.shape}')
+
+				enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+
+				if args.logs:
+					print (f'enc out - {enc_out.shape}')
+
+				dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+
+				if args.logs:
+					print (f'loss - {dec_loss / n_len}')
+				
+				val_loss += dec_loss
+
+				# question_str_list = question [0].split ()
+				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
+				# val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
+				# val_bleu_3 += sentence_bleu (question_str_list, pred_words, weights=(0.33, 0.33, 0.33, 0))
+				# # val_bleu_4 += sentence_bleu (question_str_list, pred_words)
+				# val_bleu += sentence_bleu (question_str_list, pred_words)
+				tepoch.set_postfix (val_loss=(val_loss / n_len))
+		
+		val_loss = val_loss.item () / n_len
+		# val_bleu /= n_len
+		# val_bleu_1 /= n_len 
+		# val_bleu_2 /= n_len
+		# val_bleu_3 /= n_len
+
+	# print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
+	# return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
+	return val_loss
+
+def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, device):
+	epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
+	n_len = len (train_dataloader)
+	best_epoch_loss = float ('inf')
+	best_epoch = -1
+
+	for epoch in range (args.epochs):
+		epoch_stats ['train']['loss'].append (0.0)
+		av_enc_model.train ()
+		text_enc_model.train ()
+		dec_model.train ()
+
+		with tqdm(train_dataloader) as tepoch:
+			for frames, audio_file, context, question_src, question_tgt  in tepoch:
+				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
+				
+				tepoch.set_description (f'Epoch {epoch}')
 
 				av_enc_optimizer.zero_grad()
 				text_enc_optimizer.zero_grad ()
@@ -109,82 +150,31 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
 
 				if args.logs:
-					print (f'loss - {dec_loss}')
+					print (f'loss - {dec_loss / n_len}')
 
-				break
-				
-				# val_loss += loss.item () / target_len
-
-				# question_str_list = question [0].split ()
-				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
-				# val_bleu_2 += sentence_bleu (question_str_list, pred_words, weights=(0.5, 0.5, 0, 0))
-				# val_bleu_3 += sentence_bleu (question_str_list, pred_words, weights=(0.33, 0.33, 0.33, 0))
-				# # val_bleu_4 += sentence_bleu (question_str_list, pred_words)
-				# val_bleu += sentence_bleu (question_str_list, pred_words)
-				# tepoch.set_postfix (val_loss=val_loss, val_bleu=val_bleu)
-		
-	# val_loss = val_loss.item () / n_len
-	val_bleu /= n_len
-	val_bleu_1 /= n_len 
-	val_bleu_2 /= n_len
-	val_bleu_3 /= n_len
-
-	print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
-	return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
-
-def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, device):
-	epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
-	n_len = len (train_dataloader)
-	best_epoch_score = float ('inf')
-	best_epoch = -1
-
-	for epoch in range (args.epochs):
-		epoch_stats ['train']['loss'].append (0.0)
-		av_enc_model.train ()
-		text_enc_model.train ()
-		dec_model.train ()
-
-		with tqdm(train_dataloader) as tepoch:
-			for frames, audio_file, context, question_src, question_tgt  in tepoch:
-				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
-				
-				tepoch.set_description (f'Epoch {epoch}')
-
-				av_enc_optimizer.zero_grad()
-				text_enc_optimizer.zero_grad ()
-				dec_optimizer.zero_grad()
-
-				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
-
-				if args.logs:
-					print (f'audio emb - {audio_emb.shape}')
-					print (f'video emb - {video_emb.shape}')
-
-				
-
-				loss.backward()
+				dec_loss.backward()
 
 				av_enc_optimizer.step()
 				text_enc_optimizer.step ()
 				dec_optimizer.step()
 
 				with torch.no_grad():
-					epoch_stats ['train']['loss'] [-1] += ((loss.item () / target_len) / n_len).item ()
+					epoch_stats ['train']['loss'] [-1] += (dec_loss.item () / n_len)
 				
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
 				# break
 		# break
-		val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
+		val_loss = validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
 		epoch_stats ['val']['loss'].append (val_loss)
-		epoch_stats ['val']['bleu'].append (val_bleu)
-		epoch_stats ['val']['bleu_1'].append (val_bleu_1)
-		epoch_stats ['val']['bleu_2'].append (val_bleu_2)
-		epoch_stats ['val']['bleu_3'].append (val_bleu_3)
-		# epoch_stats ['val']['bleu_4'].append (val_bleu_4)
+		# epoch_stats ['val']['bleu'].append (val_bleu)
+		# epoch_stats ['val']['bleu_1'].append (val_bleu_1)
+		# epoch_stats ['val']['bleu_2'].append (val_bleu_2)
+		# epoch_stats ['val']['bleu_3'].append (val_bleu_3)
+		# # epoch_stats ['val']['bleu_4'].append (val_bleu_4)
 
 		# Save best model
-		if val_loss < best_epoch_score:
-			best_epoch_score = val_loss
+		if val_loss < best_epoch_loss:
+			best_epoch_loss = val_loss
 			best_epoch = epoch
 
 			print ('Saving new best model !')
