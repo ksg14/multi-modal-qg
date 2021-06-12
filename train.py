@@ -87,8 +87,10 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				dec_optimizer.zero_grad()
 
 				if args.logs:
+					print (f'frames - {frames.shape}')
 					print (f'context - {context.shape}')
 					print (f'question src - {question_src.shape}')
+					print (f'question tgt - {question_tgt.shape}')
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
