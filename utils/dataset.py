@@ -55,23 +55,22 @@ class VQGDataset (Dataset):
 
         # Text for ProphetNet
         if self.prophetnet_transform:
-            question_tok = question_str.split (' ')
+            question = self.prophetnet_transform (question_str, return_tensors='pt')
 
-            print (f'src len - {len (question_tok [:-1])}')
-            print (f'tgt len - {len (question_tok [1:])}')
+            print (f'question shape - {question.input_ids}')
+
+            question_src = question_id [:, :-1]
+            question_tgt = question_id [:, 1:]
 
             context = self.prophetnet_transform (f'{answer_str} [SEP] {context_str}', return_tensors='pt')
 
-            question_src = self.prophetnet_transform (question_tok [:-1], is_split_into_words=True, return_tensors='pt')
-            question_tgt = self.prophetnet_transform (question_tok [1:], is_split_into_words=True, return_tensors='pt')
+            # question_src = self.prophetnet_transform (question_tok [:-1], is_split_into_words=True, return_tensors='pt')
+            # question_tgt = self.prophetnet_transform (question_tok [1:], is_split_into_words=True, return_tensors='pt')
 
-            print (f'src ids - {question_src.input_ids}')
-            print (f'tgt ids - {question_tgt.input_ids}')
+            print (f'src ids - {question_src}')
+            print (f'tgt ids - {question_tgt}')
 
-            print (f'src str - {self.prophetnet_transform.convert_tokens_to_string (question_src.input_ids)}')
-            print (f'tgt str - {self.prophetnet_transform.convert_tokens_to_string (question_tgt.input_ids)}')
-
-            return frames, audio_file, context.input_ids, question_src.input_ids, question_tgt.input_ids
+            return frames, audio_file, context.input_ids, question_src, question_tgt
 
 # if __name__ == '__main__':
 #     train_dataset = VQGDataset (config.train_file, vocab_file, config.salient_frames_path, config.salient_audio_path, prepare_sequence)
