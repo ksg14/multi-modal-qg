@@ -128,10 +128,10 @@ class AudioVideoEncoder (Module):
 
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file).squeeze ()
-        print (f'audio emb - {audio_emb.shape}')
+        # print (f'audio emb - {audio_emb.shape}')
 
         video_emb = self.video_enc (video_frames).squeeze ()
-        print (f'video emb shape - {video_emb.shape}')
+        # print (f'video emb shape - {video_emb.shape}')
 
         # enc_output = torch.cat ((audio_emb, video_emb), dim=1)
 

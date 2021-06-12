@@ -132,6 +132,12 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
+				if args.logs:
+					print (f'audio emb - {audio_emb.shape}')
+					print (f'video emb - {video_emb.shape}')
+
+				
+
 				loss.backward()
 
 				av_enc_optimizer.step()
