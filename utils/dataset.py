@@ -57,18 +57,15 @@ class VQGDataset (Dataset):
         if self.prophetnet_transform:
             question = self.prophetnet_transform (question_str, return_tensors='pt')
 
-            print (f'question shape - {question.input_ids.shape}')
+            # print (f'question shape - {question.input_ids.shape}')
 
             question_src = question.input_ids [:, :-1]
             question_tgt = question.input_ids [:, 1:]
 
             context = self.prophetnet_transform (f'{answer_str} [SEP] {context_str}', return_tensors='pt')
 
-            # question_src = self.prophetnet_transform (question_tok [:-1], is_split_into_words=True, return_tensors='pt')
-            # question_tgt = self.prophetnet_transform (question_tok [1:], is_split_into_words=True, return_tensors='pt')
-
-            print (f'src ids - {question_src}')
-            print (f'tgt ids - {question_tgt}')
+            # print (f'src ids - {question_src}')
+            # print (f'tgt ids - {question_tgt}')
 
             return frames, audio_file, context.input_ids, question_src, question_tgt
 
