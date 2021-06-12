@@ -1,3 +1,4 @@
+from json import encoder
 import torch
 from torch.nn import Embedding, CrossEntropyLoss
 from torch.nn import functional as F
@@ -86,6 +87,18 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				dec_optimizer.zero_grad()
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
+
+				enc_hidden_state, enc_attn = text_enc_model (context)
+				
+				if args.logs:
+					print (f'audio emb - {audio_emb.shape}')
+					print (f'video emb - {video_emb.shape}')
+					print (f'enc hidden - {enc_hidden_state.shape}')
+
+				enc_out = torch.cat ([enc_hidden_state, audio_emb.unque, video_emb], dim=1)
+
+				if args.logs:
+					print (f'enc out - {enc_out.shape}')
 
 				break
 				
