@@ -5,23 +5,31 @@ from transformers import ProphetNetTokenizer, ProphetNetEncoder, ProphetNetForCo
 
 from config import Config
 
-def save_encoder (config: Config) -> int:
+def save_tokenizer (config: Config) -> int:
 	try:
 		tokenizer = ProphetNetTokenizer.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
-		model = ProphetNetEncoder.from_pretrained('patrickvonplaten/prophetnet-large-uncased-standalone')
 	
 		tokenizer.save_pretrained(config.pretrained_tokenizer_path)
+	except Exception as e:
+		print (f'Error - {str (e)}')
+		return 1
+	return 0
+
+def save_encoder (config: Config) -> int:
+	try:
+		model = ProphetNetEncoder.from_pretrained('patrickvonplaten/prophetnet-large-uncased-standalone')
+	
 		model.save_pretrained(config.pretrained_encoder_path)
 	except Exception as e:
 		print (f'Error - {str (e)}')
 		return 1
 	return 0
 
-def save_cg_decoder (config: Config) -> int:
+def save_cg_model (config: Config) -> int:
 	try:
-		model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_decoder = True, add_cross_attention=True)
+		model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg")
 
-		model.save_pretrained(config.pretrained_decoder_path)
+		model.save_pretrained(config.pretrained_cg_path)
 	except Exception as e:
 		print (f'Error - {str (e)}')
 		return 1
@@ -40,13 +48,21 @@ def save_lm_decoder (config: Config) -> int:
 if __name__ == '__main__' :
 	parser = argparse.ArgumentParser(description='Get caption len stats')
 	parser.add_argument('-e',
-                       '--encoder',
-                       action='store_true',
-                       help='get pretrained encoder')
+						'--encoder',
+						action='store_true',
+						help='get pretrained encoder')
 	parser.add_argument('-d',
-                       '--decoder',
-                       action='store_true',
-                       help='get pretrained decoder')
+						'--decoder',
+						action='store_true',
+						help='get pretrained decoder')
+	parser.add_argument('-c',
+						'--cg_model',
+						action='store_true',
+						help='get pretrained cg model')
+	parser.add_argument('-t',
+						'--tokenizer',
+						action='store_true',
+						help='get pretrained tokenizer')
 	
 	args = parser.parse_args()
 
@@ -57,9 +73,6 @@ if __name__ == '__main__' :
 
 		if not os.path.exists (config.pretrained_path):
 			os.mkdir (config.pretrained_path)
-		
-		if not os.path.exists (config.pretrained_tokenizer_path):
-			os.mkdir (config.pretrained_tokenizer_path)
 		
 		if not os.path.exists (config.pretrained_encoder_path):
 			os.mkdir (config.pretrained_encoder_path)
@@ -76,5 +89,27 @@ if __name__ == '__main__' :
 			os.mkdir (config.pretrained_decoder_path)
 		
 		save_lm_decoder (config)
+	
+	if args.cg_model:
+		print (f'Saving CG model')
+
+		if not os.path.exists (config.pretrained_path):
+			os.mkdir (config.pretrained_path)
+		
+		if not os.path.exists (config.pretrained_cg_path):
+			os.mkdir (config.pretrained_cg_path)
+		
+		save_cg_model (config)
+	
+	if args.tokenizer:
+		print (f'Saving tokenizer')
+
+		if not os.path.exists (config.pretrained_path):
+			os.mkdir (config.pretrained_path)
+		
+		if not os.path.exists (config.pretrained_tokenizer_path):
+			os.mkdir (config.pretrained_tokenizer_path)
+		
+		save_tokenizer (config)
 	
 	print ('Done!')

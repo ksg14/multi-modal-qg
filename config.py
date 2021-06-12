@@ -29,6 +29,8 @@ class Config():
     pretrained_tokenizer_path = pretrained_path / 'tokenizer'
     pretrained_encoder_path = pretrained_path / 'encoder'
     pretrained_decoder_path = pretrained_path / 'decoder'
+    pretrained_cg_path = pretrained_path / 'prophetnet_cg'
+
 
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
