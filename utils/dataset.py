@@ -65,6 +65,9 @@ class VQGDataset (Dataset):
             question_src = self.prophetnet_transform (question_tok [:-1], is_split_into_words=True, return_tensors='pt')
             question_tgt = self.prophetnet_transform (question_tok [1:], is_split_into_words=True, return_tensors='pt')
 
+            print (f'src ids - {question_src.input_ids}')
+            print (f'tgt ids - {question_tgt.input_ids}')
+
             return frames, audio_file, context.input_ids, question_src.input_ids, question_tgt.input_ids
 
 # if __name__ == '__main__':
