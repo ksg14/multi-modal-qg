@@ -32,9 +32,6 @@ class VQGDataset (Dataset):
         question_str = self.questions [idx] ['question']
         answer_str = self.questions [idx] ['answer']
 
-        print (f'question id - {question_id}')
-        print (f'question str - {question_str}')
-
         # Video
         frames = torch.from_numpy (np.load (os.path.join (self.frames_path, f'v_{video_id}_q_{question_id}_.npy')))
         if self.video_transform:
