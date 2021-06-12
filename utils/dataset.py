@@ -57,6 +57,9 @@ class VQGDataset (Dataset):
         if self.prophetnet_transform:
             question_tok = question_str.split (' ')
 
+            print (f'src len - {len (question_tok [:-1])}')
+            print (f'tgt len - {len (question_tok [1:])}')
+
             context = self.prophetnet_transform (f'{answer_str} [SEP] {context_str}', return_tensors='pt')
 
             question_src = self.prophetnet_transform (question_tok [:-1], is_split_into_words=True, return_tensors='pt')
