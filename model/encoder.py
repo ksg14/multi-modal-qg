@@ -121,8 +121,7 @@ class AudioVideoEncoder (Module):
         self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim)
 
     def forward (self, audio_file, video_frames):
-        audio_out = self.audio_enc (audio_file)
-        audio_emb = audio_out.view (1, -1)
+        audio_emb = self.audio_enc (audio_file).squeeze ()
         print (f'audio emb - {audio_emb.shape}')
 
         video_emb = self.video_enc (video_frames).squeeze ()
