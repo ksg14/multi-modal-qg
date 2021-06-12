@@ -10,8 +10,8 @@ def save_encoder (config: Config) -> int:
 		tokenizer = ProphetNetTokenizer.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
 		model = ProphetNetEncoder.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
 	
-		tokenizer.save_pretrained(config.pretrained_vitfe_path)
-		model.save_pretrained(config.pretrained_vit_path)
+		tokenizer.save_pretrained(config.pretrained_tokenizer_path)
+		model.save_pretrained(config.pretrained_encoder_path)
 	except Exception as e:
 		print (f'Error - {str (e)}')
 		return 1
