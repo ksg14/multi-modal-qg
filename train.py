@@ -101,7 +101,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 					print (f'video emb - {video_emb.shape}')
 					print (f'enc hidden - {enc_hidden_state.shape}')
 
-				enc_out = torch.cat ([enc_hidden_state, audio_emb.unque, video_emb], dim=1)
+				enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
 				if args.logs:
 					print (f'enc out - {enc_out.shape}')
