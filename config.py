@@ -11,6 +11,12 @@ class Config():
 
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
+        
+        if not os.path.exists(self.text_enc_model_path):
+            os.makedirs(self.text_enc_model_path)
+        
+        if not os.path.exists(self.dec_model_path):
+            os.makedirs(self.dec_model_path)
 
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)
