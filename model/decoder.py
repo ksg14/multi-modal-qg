@@ -24,6 +24,7 @@ class ProphetNetDecoder (Module):
         return outputs.loss, outputs.logits, attentions
     
     def save_model (self, save_path):
+        print (f'Saving model to {save_path}')
         self.decoder.save_pretrained(save_path)
 
 
