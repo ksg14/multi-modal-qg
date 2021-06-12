@@ -68,8 +68,8 @@ class VQGDataset (Dataset):
             print (f'src ids - {question_src.input_ids}')
             print (f'tgt ids - {question_tgt.input_ids}')
 
-            print (f'src str - {self.prophetnet_transform.decode (question_src.input_ids)}')
-            print (f'tgt str - {self.prophetnet_transform.decode (question_tgt.input_ids)}')
+            print (f'src str - {self.prophetnet_transform.convert_tokens_to_string (question_src.input_ids)}')
+            print (f'tgt str - {self.prophetnet_transform.convert_tokens_to_string (question_tgt.input_ids)}')
 
             return frames, audio_file, context.input_ids, question_src.input_ids, question_tgt.input_ids
 
