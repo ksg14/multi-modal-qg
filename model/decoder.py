@@ -4,6 +4,18 @@ from torch.nn import Module, LSTM, Linear, Dropout, GRU, Embedding
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
+from transformers import ProphetNetForConditionalGeneration
+
+class ProphetNetDecoder (Module):
+    def __init__(self, dec_path):
+        super().__init__()
+
+        self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path, is_decoder = True, add_cross_attention=True)
+    
+    def forward (self):
+        pass
+
+
 class Decoder (Module):
     def __init__ (self, num_layers, dropout, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer):
         super().__init__()

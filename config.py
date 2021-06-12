@@ -24,6 +24,12 @@ class Config():
     stats_pkl_path = output_path / 'stats.pkl'
     learned_weight_path = output_path / 'learned_weight.pt'
 
+    # pretrained models
+    pretrained_path = Path (f'pretrained_models')
+    pretrained_tokenizer_path = pretrained_path / 'tokenizer'
+    pretrained_encoder_path = pretrained_path / 'encoder'
+    pretrained_decoder_path = pretrained_path / 'decoder'
+
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
     dataset_path = Path (r'dataset')

@@ -5,6 +5,8 @@ from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
 import torchvision.models as models
 
+from transformers import ProphetNetEncoder
+
 class AudioEncoder (Module):
     def __init__ (self):
         super().__init__()
@@ -129,3 +131,12 @@ class AudioVideoEncoder (Module):
         # enc_output = torch.cat ((audio_emb, video_emb), dim=1)
 
         return audio_emb, video_emb
+
+class ProphetNetTextEncoder (Module):
+    def __init__(self, enc_path):
+        super().__init__()
+
+        self.encoder = ProphetNetEncoder.from_pretrained (enc_path)
+    
+    def forward (self):
+        pass
