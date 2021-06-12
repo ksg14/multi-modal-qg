@@ -146,7 +146,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
 				# break
 		# break
-		val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, device)
+		val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
 		epoch_stats ['val']['loss'].append (val_loss)
 		epoch_stats ['val']['bleu'].append (val_bleu)
 		epoch_stats ['val']['bleu_1'].append (val_bleu_1)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 	# 								av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
 	# 								dec_optimizer=dec_optimizer, device=device)
 
-	validate (av_enc_model, text_enc_model, dec_model, val_dataloader, device)
+	validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
 		
 	# print (f'Best epoch - {best_epoch} !')
 
