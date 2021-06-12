@@ -238,28 +238,27 @@ if __name__ == '__main__':
 	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=args.lr)
 	dec_optimizer = Adam(dec_model.parameters(), lr=args.lr)
 
-	# epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
-	# 								train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-	# 								av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
-	# 								dec_optimizer=dec_optimizer, device=device)
+	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
+									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
+									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
+									dec_optimizer=dec_optimizer, device=device)
 
-	validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
+	# validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
 		
-	# print (f'Best epoch - {best_epoch} !')
+	print (f'Best epoch - {best_epoch} !')
 
-	# try:
-	# 	with open (config.stats_json_path, 'w') as f:
-	# 		json.dump (epoch_stats, f)
-	# 		print (f'Stats saved to {config.stats_json_path}')
-	# except Exception:
-	# 	pickle.dump(epoch_stats, open(config.stats_pkl_path, 'wb'))
-	# 	print (f'Stats saved to {config.stats_pkl_path}')
+	try:
+		with open (config.stats_json_path, 'w') as f:
+			json.dump (epoch_stats, f)
+			print (f'Stats saved to {config.stats_json_path}')
+	except Exception:
+		pickle.dump(epoch_stats, open(config.stats_pkl_path, 'wb'))
+		print (f'Stats saved to {config.stats_pkl_path}')
 		
-	# try:
-	# 	config.save_config ()
-	# except Exception as e:
-	# 	print (f'Unable to save config {str (e)}')
-		
+	try:
+		config.save_config ()
+	except Exception as e:
+		print (f'Unable to save config {str (e)}')
 		
 	print ('Done !')
 
