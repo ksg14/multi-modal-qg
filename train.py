@@ -106,6 +106,11 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				if args.logs:
 					print (f'enc out - {enc_out.shape}')
 
+				dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+
+				if args.logs:
+					print (f'loss - {dec_loss}')
+
 				break
 				
 				# val_loss += loss.item () / target_len
