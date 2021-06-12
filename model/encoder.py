@@ -8,10 +8,10 @@ import torchvision.models as models
 from transformers import ProphetNetEncoder
 
 class AudioEncoder (Module):
-    def __init__ (self):
+    def __init__ (self, device):
         super().__init__()
         
-        self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', postprocess=False)
+        self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', device=device, postprocess=False)
         self.adapt_avg_pool = AdaptiveAvgPool1d(1)
         # self.fc1 = Linear (128, audio_emb) 
 
@@ -113,10 +113,10 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim):
+    def __init__(self, av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim, device):
         super().__init__()
 
-        self.audio_enc = AudioEncoder ()
+        self.audio_enc = AudioEncoder (device)
         # self.video_enc = VideoEncoder (download_pretrained)
         self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim)
 

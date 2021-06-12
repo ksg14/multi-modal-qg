@@ -132,8 +132,6 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-
-
 				loss.backward()
 
 				av_enc_optimizer.step()
@@ -206,8 +204,7 @@ if __name__ == '__main__':
 	train_dataloader = DataLoader (train_dataset, batch_size=args.batch_sz, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=args.batch_sz, shuffle=True)	
 
-	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim)
-	# av_enc_model.eval ()
+	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, device)
 
 	text_enc_model = ProphetNetTextEncoder (config.pretrained_encoder_path)
 		
