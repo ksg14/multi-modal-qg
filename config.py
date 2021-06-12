@@ -18,8 +18,8 @@ class Config():
     # results
     output_path = Path (r'results/test/')
     av_model_path = output_path / 'av_model.pth'
-    text_enc_model_path = output_path / 'text_enc_model.pth'
-    dec_model_path = output_path / 'dec_model.pth'
+    text_enc_model_path = output_path / 'text_enc_model'
+    dec_model_path = output_path / 'dec_model'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
     learned_weight_path = output_path / 'learned_weight.pt'

@@ -22,6 +22,9 @@ class ProphetNetDecoder (Module):
             attentions = None
         
         return outputs.loss, outputs.logits, attentions
+    
+    def save_model (self, save_path):
+        self.decoder.save_pretrained(save_path)
 
 
 class Decoder (Module):

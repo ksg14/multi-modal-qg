@@ -153,3 +153,6 @@ class ProphetNetTextEncoder (Module):
             attentions = None
 
         return outputs.last_hidden_state, attentions
+    
+    def save_model (self, save_path):
+        self.encoder.save_pretrained(save_path)

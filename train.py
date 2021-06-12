@@ -179,20 +179,16 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 			print ('Saving new best model !')
 			save_model (av_enc_model, config.av_model_path)
-			save_model (text_enc_model, config.text_enc_model_path)
-			save_model (dec_model, config.dec_model_path)
-			# save_weights (dec_model.emb_layer, config.learned_weight_path)
+			text_enc_model.save_model (config.text_enc_model_path)
+			dec_model.save_model (config.dec_model_path)
 		
 		# Save last epoch model
 		if epoch == args.epochs-1:
 			print ('Saving last epoch model !')
 			save_model (av_enc_model, config.output_path / 'last_av_model.pth')
-			save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
-			save_model (dec_model, config.output_path / 'last_decoder.pth')
-			# save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pt')
+			text_enc_model.save_model (config.output_path / 'last_text_enc')
+			dec_model.save_model (config.output_path / 'last_dec')
 
-		# print({ 'epoch': epoch, 'train_loss': epoch_stats ['train']['loss'] [-1] })
-		# break
 	return epoch_stats, best_epoch
 
 if __name__ == '__main__':
