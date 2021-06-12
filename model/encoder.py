@@ -145,7 +145,7 @@ class ProphetNetTextEncoder (Module):
         self.encoder = ProphetNetEncoder.from_pretrained (enc_path)
     
     def forward (self, context):
-        outputs = self.encoder (input_ids=context, output_attentions=self.out_attentions)
+        outputs = self.encoder (input_ids=context)
 
         if self.out_attentions:
             attentions = outputs.attentions
