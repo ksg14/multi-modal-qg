@@ -13,7 +13,7 @@ class AudioEncoder (Module):
         
         self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', device=device, postprocess=False)
         self.adapt_avg_pool = AdaptiveAvgPool1d(1)
-        # self.fc1 = Linear (128, audio_emb) 
+        # self.out_layer = Linear (128, audio_emb) 
 
     def forward (self, audio_file):
         out = self.vggish.forward (audio_file)
@@ -54,6 +54,7 @@ class VideoConvLstmEncoder (Module):
         self.flatten = Flatten ()
 
         self.lstm = LSTM(self.video_emb_dim, self.hidden_dim)
+        # self.out_layer = Linear (self.hidden_dim)
 
         self.initialise_weights ()
 
@@ -137,6 +138,7 @@ class ProphetNetTextEncoder (Module):
         self.out_attentions = out_attentions
 
         self.encoder = ProphetNetEncoder.from_pretrained (enc_path)
+        print (f'prophetnet hidden size - {self.encoder.config.hidden_size}')
     
     def forward (self, context):
         outputs = self.encoder (input_ids=context, output_attentions=self.out_attentions)
