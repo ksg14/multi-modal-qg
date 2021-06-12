@@ -204,7 +204,7 @@ if __name__ == '__main__':
 	train_dataloader = DataLoader (train_dataset, batch_size=args.batch_sz, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=args.batch_sz, shuffle=True)	
 
-	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, device)
+	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, config.prophetnet_hidden_sz, device)
 
 	text_enc_model = ProphetNetTextEncoder (config.pretrained_encoder_path)
 		

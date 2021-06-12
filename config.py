@@ -87,7 +87,7 @@ class Config():
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
-    prophetnet_hidden_sz = 1
+    prophetnet_hidden_sz = 1024
     dec_lstm_hidden_dim = 512
     dec_lstm_layers = 3
     dec_lstm_dropout = 0.2

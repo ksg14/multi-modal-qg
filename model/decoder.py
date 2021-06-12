@@ -12,6 +12,7 @@ class ProphetNetDecoder (Module):
         self.out_attentions = out_attentions
 
         self.decoder = ProphetNetForCausalLM.from_pretrained (dec_path, is_decoder = True, add_cross_attention=True)
+        print (f'prophetnet hidden size - {self.decoder.config.hidden_size}')
     
     def forward (self, src, tgt, enc_out):
         outputs = self.decoder (input_ids=src, labels=tgt, output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
