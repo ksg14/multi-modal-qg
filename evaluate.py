@@ -135,7 +135,7 @@ if __name__ == '__main__':
 		test_dataloader = DataLoader (test_dataset, batch_size=args.batch_sz, shuffle=False)
 
 	
-		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, config.prophetnet_hidden_sz, device)
 		
 		if args.last:
 			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
