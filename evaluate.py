@@ -156,7 +156,7 @@ if __name__ == '__main__':
 		else:
 			dec_path = config.dec_model_path
 
-		dec_model = ProphetNetDecoder (config.pretrained_decoder_path)
+		dec_model = ProphetNetDecoder (dec_path)
 		dec_model.eval ()
 
 		av_enc_model.to (device)
