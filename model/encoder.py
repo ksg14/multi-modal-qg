@@ -142,10 +142,10 @@ class ProphetNetTextEncoder (Module):
         super().__init__()
         self.out_attentions = out_attentions
 
-        self.encoder = ProphetNetForConditionalGeneration.from_pretrained (enc_path, is_encoder_decoder=True, is_decoder=False)
+        self.encoder = ProphetNetEncoder.from_pretrained (enc_path, is_decoder=False)
     
     def forward (self, context):
-        outputs = self.encoder (input_ids=context.view (1, -1), output_attentions=self.out_attentions)
+        outputs = self.encoder (input_ids=context.view (1, -1))
 
         if self.out_attentions:
             attentions = outputs.attentions

@@ -14,7 +14,7 @@ class ProphetNetDecoder (Module):
         self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path)
     
     def forward (self, src, tgt, enc_out):
-        outputs = self.decoder (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
+        outputs = self.decoder (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), encoder_outputs=(enc_out,))
 
         if self.out_attentions:
             attentions = outputs.cross_attentions 
@@ -25,9 +25,9 @@ class ProphetNetDecoder (Module):
     
     def generate (self, enc_out, strategy, beams, max_len):
         if strategy == 'greedy':
-            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len)
+            out_ids = self.decoder.generate (encoder_outputs=(enc_out,), max_length=max_len)
         elif strategy == 'beam':
-            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len, num_beams=beams, early_stopping=True)
+            out_ids = self.decoder.generate (encoder_outputs=(enc_out,), max_length=max_len, num_beams=beams, early_stopping=True)
 
         return out_ids
 
