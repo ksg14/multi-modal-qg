@@ -23,6 +23,14 @@ class ProphetNetDecoder (Module):
         
         return outputs.loss, outputs.logits, attentions
     
+    def generate (self, enc_out, strategy, beams, max_len):
+        if strategy == 'greedy':
+            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len)
+        elif strategy == 'beam':
+            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len, num_beams=beams, early_stopping=True)
+
+        return out_ids
+
     def save_model (self, save_path):
         print (f'Saving model to {save_path}')
         self.decoder.save_pretrained(save_path)
