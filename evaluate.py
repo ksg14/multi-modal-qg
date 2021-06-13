@@ -99,6 +99,10 @@ if __name__ == '__main__':
 						'--last',
 						action='store_true',
 						help='get last epoch results')
+	parser.add_argument('-p',
+						'--pretrained',
+						action='store_true',
+						help='get pretrained model results')
 	parser.add_argument('--logs',
 						action='store_true',
 						help='get logs')
@@ -133,7 +137,6 @@ if __name__ == '__main__':
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
 		test_dataloader = DataLoader (test_dataset, batch_size=args.batch_sz, shuffle=False)
 
-	
 		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, config.prophetnet_hidden_sz, device)
 		
 		if args.last:
@@ -143,18 +146,20 @@ if __name__ == '__main__':
 		
 		av_enc_model.eval ()
 
+		enc_path = config.text_enc_model_path
 		if args.last:
 			enc_path = config.last_text_enc_model_path
-		else:
-			enc_path = config.text_enc_model_path
+		if args.pretrained:
+			enc_path = config.pretrained_cg_enc_path
 
 		text_enc_model = ProphetNetTextEncoder (enc_path)
 		text_enc_model.eval()
 
+		dec_path = config.dec_model_path
 		if args.last:
 			dec_path = config.last_dec_model_path
-		else:
-			dec_path = config.dec_model_path
+		if args.pretrained:
+			dec_path = config.pretrained_cg_dec_path
 
 		dec_model = ProphetNetDecoder (dec_path)
 		dec_model.eval ()
