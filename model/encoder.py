@@ -5,7 +5,7 @@ from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
 import torchvision.models as models
 
-from transformers import ProphetNetEncoder
+from transformers import ProphetNetEncoder, ProphetNetForConditionalGeneration
 
 class AudioEncoder (Module):
     def __init__ (self, audio_dim, out_dim, device):
@@ -142,7 +142,7 @@ class ProphetNetTextEncoder (Module):
         super().__init__()
         self.out_attentions = out_attentions
 
-        self.encoder = ProphetNetEncoder.from_pretrained (enc_path)
+        self.encoder = ProphetNetForConditionalGeneration.from_pretrained (enc_path, is_encoder_decoder=True, is_decoder=False)
     
     def forward (self, context):
         outputs = self.encoder (input_ids=context.view (1, -1), output_attentions=self.out_attentions)

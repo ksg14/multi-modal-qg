@@ -4,17 +4,17 @@ from torch.nn import Module, LSTM, Linear, Dropout, GRU, Embedding
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
-from transformers import ProphetNetForCausalLM
+from transformers import ProphetNetForCausalLM, ProphetNetForConditionalGeneration
 
 class ProphetNetDecoder (Module):
     def __init__(self, dec_path, out_attentions=False):
         super().__init__()
         self.out_attentions = out_attentions
 
-        self.decoder = ProphetNetForCausalLM.from_pretrained (dec_path, is_decoder = True, add_cross_attention=True)
+        self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path, is_encoder_decoder=True, is_decoder = True, add_cross_attention=True)
     
     def forward (self, src, tgt, enc_out):
-        outputs = self.decoder (input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
+        outputs = self.decoder (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
 
         if self.out_attentions:
             attentions = outputs.cross_attentions 
