@@ -15,13 +15,8 @@ class ProphetNetDecoder (Module):
     
     def forward (self, src, tgt, enc_out):
         outputs = self.decoder (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), encoder_outputs=(enc_out,), return_dict=False)
-
-        if self.out_attentions:
-            attentions = outputs.cross_attentions 
-        else:
-            attentions = None
         
-        return outputs.loss, outputs.logits, attentions
+        return outputs [0], outputs [1], outputs [7]
     
     def generate (self, enc_out, strategy, beams, max_len):
         if strategy == 'greedy':
@@ -35,6 +30,35 @@ class ProphetNetDecoder (Module):
         print (f'Saving model to {save_path}')
         self.decoder.save_pretrained(save_path)
 
+class ProphetNetCGDecoder (Module):
+    def __init__(self, dec_path, out_attentions=False):
+        super().__init__()
+        self.out_attentions = out_attentions
+
+        self.model = ProphetNetForConditionalGeneration.from_pretrained (dec_path)
+    
+    def forward (self, context, audio_emb, video_emb, src, tgt):
+        enc_outputs = self.model.prophetnet.get_encoder(input_ids=context.view (1, -1))
+        enc_emb = torch.cat ([enc_outputs.last_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+
+        dec_outputs = self.model (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), encoder_outputs=(enc_emb,), return_dict=False)
+        
+        return dec_outputs [0], dec_outputs [1], dec_outputs [7]
+    
+    def generate (self, context, audio_emb, video_emb, strategy, beams, max_len):
+        enc_outputs = self.model.prophetnet.get_encoder(input_ids=context.view (1, -1))
+        enc_emb = torch.cat ([enc_outputs.last_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+
+        if strategy == 'greedy':
+            out_ids = self.model.generate (encoder_outputs=(enc_emb,), max_length=max_len)
+        elif strategy == 'beam':
+            out_ids = self.model.generate (encoder_outputs=(enc_emb,), max_length=max_len, num_beams=beams, early_stopping=True)
+
+        return out_ids
+
+    def save_model (self, save_path):
+        print (f'Saving model to {save_path}')
+        self.model.save_pretrained(save_path)
 
 class Decoder (Module):
     def __init__ (self, num_layers, dropout, hidden_dim, n_vocab, word_emb_dim, av_emb_dim, emb_layer):

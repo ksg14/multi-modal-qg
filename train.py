@@ -15,7 +15,7 @@ import pickle
 import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder, ProphetNetTextEncoder
-from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder
+from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder, ProphetNetCGDecoder
 
 from transformers import ProphetNetTokenizer
 
@@ -50,7 +50,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 	n_len = len (dataloader)
 		
 	av_enc_model.eval () 
-	text_enc_model.eval ()
+	# text_enc_model.eval ()
 	dec_model.eval ()
 
 	with torch.no_grad ():
@@ -68,19 +68,20 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-				enc_hidden_state, enc_attn = text_enc_model (context)
+				# enc_hidden_state, enc_attn = text_enc_model (context)
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
-					print (f'enc hidden - {enc_hidden_state.shape}')
+					# print (f'enc hidden - {enc_hidden_state.shape}')
 
-				enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
-				if args.logs:
-					print (f'enc out - {enc_out.shape}')
+				# if args.logs:
+				# 	print (f'enc out - {enc_out.shape}')
 
-				dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+				# dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+				dec_loss, dec_logits, dec_attn = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
 
 				if args.logs:
 					print (f'loss - {dec_loss / n_len}')
@@ -114,7 +115,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 	for epoch in range (args.epochs):
 		epoch_stats ['train']['loss'].append (0.0)
 		av_enc_model.train ()
-		text_enc_model.train ()
+		# text_enc_model.train ()
 		dec_model.train ()
 
 		with tqdm(train_dataloader) as tepoch:
@@ -124,7 +125,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 				tepoch.set_description (f'Epoch {epoch}')
 
 				av_enc_optimizer.zero_grad()
-				text_enc_optimizer.zero_grad ()
+				# text_enc_optimizer.zero_grad ()
 				dec_optimizer.zero_grad()
 
 				if args.logs:
@@ -135,19 +136,20 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-				enc_hidden_state, enc_attn = text_enc_model (context)
+				# enc_hidden_state, enc_attn = text_enc_model (context)
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
-					print (f'enc hidden - {enc_hidden_state.shape}')
+					# print (f'enc hidden - {enc_hidden_state.shape}')
 
-				enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
-				if args.logs:
-					print (f'enc out - {enc_out.shape}')
+				# if args.logs:
+				# 	print (f'enc out - {enc_out.shape}')
 
-				dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+				# dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
+				dec_loss, dec_logits, dec_attn = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
 
 				if args.logs:
 					print (f'loss - {dec_loss / n_len}')
@@ -155,7 +157,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 				dec_loss.backward()
 
 				av_enc_optimizer.step()
-				text_enc_optimizer.step ()
+				# text_enc_optimizer.step ()
 				dec_optimizer.step()
 
 				with torch.no_grad():
@@ -179,14 +181,14 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 			print ('Saving new best model !')
 			save_model (av_enc_model, config.av_model_path)
-			text_enc_model.save_model (config.text_enc_model_path)
+			# text_enc_model.save_model (config.text_enc_model_path)
 			dec_model.save_model (config.dec_model_path)
 		
 		# Save last epoch model
 		if epoch == args.epochs-1:
 			print ('Saving last epoch model !')
 			save_model (av_enc_model, config.output_path / 'last_av_model.pth')
-			text_enc_model.save_model (config.last_text_enc_model_path)
+			# text_enc_model.save_model (config.last_text_enc_model_path)
 			dec_model.save_model (config.last_dec_model_path)
 
 	return epoch_stats, best_epoch
@@ -222,21 +224,21 @@ if __name__ == '__main__':
 
 	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, config.prophetnet_hidden_sz, device)
 
-	text_enc_model = ProphetNetTextEncoder (config.pretrained_encoder_path)
+	# text_enc_model = ProphetNetTextEncoder (config.pretrained_encoder_path)
 		
-	dec_model = ProphetNetDecoder (config.pretrained_decoder_path)
+	dec_model = ProphetNetCGDecoder (config.pretrained_cg_dec_path)
 
 	av_enc_model.to (device)
-	text_enc_model.to (device)
+	# text_enc_model.to (device)
 	dec_model.to (device)
 
 	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
-	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=args.lr)
+	# text_enc_optimizer = Adam(text_enc_model.parameters(), lr=args.lr)
 	dec_optimizer = Adam(dec_model.parameters(), lr=args.lr)
 
-	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
+	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, text_enc_model=None, dec_model=dec_model, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
+									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=None, \
 									dec_optimizer=dec_optimizer, device=device)
 
 	# validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
