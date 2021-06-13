@@ -33,7 +33,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 	# val_bleu_3 = 0.0
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
-	predictions = {}
+	predictions = []
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
