@@ -103,6 +103,9 @@ if __name__ == '__main__':
 						'--last',
 						action='store_true',
 						help='get last epoch results')
+	parser.add_argument('--logs',
+						action='store_true',
+						help='get logs')
 	parser.add_argument('-c', 
 						'--config_path',
 						type=str,
