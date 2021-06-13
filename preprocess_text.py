@@ -73,7 +73,7 @@ def preprocess_corpus (corpus):
         question_obj ['context'] = preprocess_text (question_obj ['context'])
         question_obj ['answer'] = preprocess_text (question_obj ['answer'])
 
-        if question_obj ['question'] == None or question_obj ['question'] == None or question_obj ['question'] == None:
+        if question_obj ['question'] == None or question_obj ['context'] == None or question_obj ['answer'] == None:
             return question_obj ['question_id'], None 
     return -1, corpus
 

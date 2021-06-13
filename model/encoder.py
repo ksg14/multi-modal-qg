@@ -8,17 +8,19 @@ import torchvision.models as models
 from transformers import ProphetNetEncoder
 
 class AudioEncoder (Module):
-    def __init__ (self):
+    def __init__ (self, audio_dim, out_dim, device):
         super().__init__()
+        self.audio_dim = audio_dim
+        self.out_dim = out_dim
         
-        self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', postprocess=False)
-        self.adapt_avg_pool = AdaptiveAvgPool1d(1)
-        # self.fc1 = Linear (128, audio_emb) 
+        self.vggish = torch.hub.load('harritaylor/torchvggish', 'vggish', device=device, postprocess=False)
+        # self.adapt_avg_pool = AdaptiveAvgPool1d(1)
+        self.out_layer = Linear (self.audio_dim, self.out_dim) 
 
     def forward (self, audio_file):
-        out = self.vggish.forward (audio_file)
-        # embeddings = self.adapt_avg_pool (out.view (1, out.shape [1], -1))
-        return out
+        audio_out = self.vggish.forward (audio_file)
+        fc_out = F.relu (self.out_layer (audio_out))
+        return fc_out
 
 class VideoResnetEncoder (Module):
     def __init__ (self, download_pretrained=False):
@@ -31,13 +33,14 @@ class VideoResnetEncoder (Module):
         return embeddings
 
 class VideoConvLstmEncoder (Module):
-    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_emb_dim):
+    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_emb_dim, out_dim):
         super().__init__()
         self.in_channels = in_channels
         self.kernel_sz = kernel_sz
         self.stride = stride
         self.hidden_dim = hidden_dim
         self.video_emb_dim = video_emb_dim
+        self.out_dim = out_dim
 
         self.conv1 = Conv2d (self.in_channels, 4, self.kernel_sz, self.stride)
         self.bn1 = BatchNorm2d (4)
@@ -54,6 +57,7 @@ class VideoConvLstmEncoder (Module):
         self.flatten = Flatten ()
 
         self.lstm = LSTM(self.video_emb_dim, self.hidden_dim)
+        self.out_layer = Linear (self.hidden_dim, self.out_dim)
 
         self.initialise_weights ()
 
@@ -70,7 +74,9 @@ class VideoConvLstmEncoder (Module):
 
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
-        return lstm_out
+        fc_out = F.relu (self.out_layer (lstm_out))
+
+        return fc_out
     
     def initialise_weights (self):
         for param in self.lstm.parameters():
@@ -113,17 +119,16 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim):
+    def __init__(self, av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim, audio_dim, out_dim, device):
         super().__init__()
 
-        self.audio_enc = AudioEncoder ()
+        self.audio_enc = AudioEncoder (audio_dim, out_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, av_hidden_dim, video_emb_dim, out_dim)
 
     def forward (self, audio_file, video_frames):
-        audio_out = self.audio_enc (audio_file)
-        audio_emb = audio_out.view (1, -1)
-        # print (audio_emb.shape)
+        audio_emb = self.audio_enc (audio_file)
+        # print (f'audio emb - {audio_emb.shape}')
 
         video_emb = self.video_enc (video_frames).squeeze ()
         # print (f'video emb shape - {video_emb.shape}')
@@ -133,10 +138,22 @@ class AudioVideoEncoder (Module):
         return audio_emb, video_emb
 
 class ProphetNetTextEncoder (Module):
-    def __init__(self, enc_path):
+    def __init__(self, enc_path, out_attentions=False):
         super().__init__()
+        self.out_attentions = out_attentions
 
         self.encoder = ProphetNetEncoder.from_pretrained (enc_path)
     
-    def forward (self):
-        pass
+    def forward (self, context):
+        outputs = self.encoder (input_ids=context.view (1, -1), output_attentions=self.out_attentions)
+
+        if self.out_attentions:
+            attentions = outputs.attentions
+        else:
+            attentions = None
+
+        return outputs.last_hidden_state, attentions
+    
+    def save_model (self, save_path):
+        print (f'Saving model to {save_path}')
+        self.encoder.save_pretrained(save_path)

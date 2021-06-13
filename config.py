@@ -11,6 +11,18 @@ class Config():
 
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
+        
+        if not os.path.exists(self.text_enc_model_path):
+            os.makedirs(self.text_enc_model_path)
+        
+        if not os.path.exists(self.dec_model_path):
+            os.makedirs(self.dec_model_path)
+        
+        if not os.path.exists(self.last_text_enc_model_path):
+            os.makedirs(self.last_text_enc_model_path)
+        
+        if not os.path.exists(self.last_dec_model_path):
+            os.makedirs(self.last_dec_model_path)
 
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)
@@ -18,8 +30,10 @@ class Config():
     # results
     output_path = Path (r'results/exp-prophetnet_cg-1/')
     av_model_path = output_path / 'av_model.pth'
-    text_enc_model_path = output_path / 'text_enc_model.pth'
-    dec_model_path = output_path / 'dec_model.pth'
+    text_enc_model_path = output_path / 'text_enc_model'
+    dec_model_path = output_path / 'dec_model'
+    last_text_enc_model_path = output_path / 'last_text_enc_model'
+    last_dec_model_path = output_path / 'last_dec_model'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
     learned_weight_path = output_path / 'learned_weight.pt'
@@ -67,8 +81,6 @@ class Config():
     glove_matrix_file = glove_path / f'6B.{glove_emb_dim}_matrix.npy'
 
     # hyper-params
-    epochs = 100
-    lr = 1e-04
     optim='adam' # sgd, adam
     audio_emb = 128
     av_emb = 128 + 400
@@ -89,6 +101,7 @@ class Config():
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
+    prophetnet_hidden_sz = 1024
     dec_lstm_hidden_dim = 512
     dec_lstm_layers = 3
     dec_lstm_dropout = 0.2

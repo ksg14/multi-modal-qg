@@ -4,16 +4,36 @@ from torch.nn import Module, LSTM, Linear, Dropout, GRU, Embedding
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
-from transformers import ProphetNetForConditionalGeneration
+from transformers import ProphetNetForCausalLM
 
 class ProphetNetDecoder (Module):
-    def __init__(self, dec_path):
+    def __init__(self, dec_path, out_attentions=False):
         super().__init__()
+        self.out_attentions = out_attentions
 
-        self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path, is_decoder = True, add_cross_attention=True)
+        self.decoder = ProphetNetForCausalLM.from_pretrained (dec_path, is_decoder = True, add_cross_attention=True)
     
-    def forward (self):
-        pass
+    def forward (self, src, tgt, enc_out):
+        outputs = self.decoder (input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
+
+        if self.out_attentions:
+            attentions = outputs.cross_attentions 
+        else:
+            attentions = None
+        
+        return outputs.loss, outputs.logits, attentions
+    
+    def generate (self, enc_out, strategy, beams, max_len):
+        if strategy == 'greedy':
+            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len)
+        elif strategy == 'beam':
+            out_ids = self.decoder.generate (encoder_hidden_states=enc_out, max_length=max_len, num_beams=beams, early_stopping=True)
+
+        return out_ids
+
+    def save_model (self, save_path):
+        print (f'Saving model to {save_path}')
+        self.decoder.save_pretrained(save_path)
 
 
 class Decoder (Module):
