@@ -43,7 +43,7 @@ class ProphetNetCGDecoder (Module):
 
         dec_outputs = self.model (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), encoder_outputs=(enc_emb,), return_dict=False)
         
-        return dec_outputs [0], dec_outputs [1], dec_outputs [7]
+        return dec_outputs [0], dec_outputs [1]
     
     def generate (self, context, audio_emb, video_emb, strategy, beams, max_len):
         enc_outputs = self.model.prophetnet.encoder(input_ids=context.view (1, -1))

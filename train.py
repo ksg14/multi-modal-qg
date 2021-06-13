@@ -81,7 +81,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				# 	print (f'enc out - {enc_out.shape}')
 
 				# dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
-				dec_loss, dec_logits, dec_attn = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
+				dec_loss, dec_logits = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
 
 				if args.logs:
 					print (f'loss - {dec_loss / n_len}')
@@ -149,7 +149,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 				# 	print (f'enc out - {enc_out.shape}')
 
 				# dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
-				dec_loss, dec_logits, dec_attn = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
+				dec_loss, dec_logits = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
 
 				if args.logs:
 					print (f'loss - {dec_loss / n_len}')
