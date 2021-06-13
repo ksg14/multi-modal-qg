@@ -33,7 +33,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 	# val_bleu_3 = 0.0
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
-	preictions = {}
+	predictions = {}
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
@@ -63,10 +63,12 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 					print (f'enc out - {enc_out.shape}')
 
 				if args.strategy == 'greedy':
-					pred_question_ids = dec_model.decoder.generate (max_length=args.max_len)
+					pred_question_ids = dec_model.decoder.generate (encoder_hidden_states=enc_out, max_length=args.max_len)
 				elif args.strategy == 'beam':
-					pred_question_ids = dec_model.decoder.generate (max_length=args.max_len, num_beams=args.beams, early_stopping=True)
+					pred_question_ids = dec_model.decoder.generate (encoder_hidden_states=enc_out, max_length=args.max_len, num_beams=args.beams, early_stopping=True)
 				
+				print (f'pred ids - {type (pred_question_ids)}')
+
 				pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
 
 				predictions.append ({
