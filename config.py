@@ -44,6 +44,8 @@ class Config():
     pretrained_encoder_path = pretrained_path / 'encoder'
     pretrained_decoder_path = pretrained_path / 'decoder'
     pretrained_cg_path = pretrained_path / 'prophetnet_cg'
+    pretrained_cg_enc_path = pretrained_path / 'prophetnet_cg_enc'
+    pretrained_cg_dec_path = pretrained_path / 'prophetnet_cg_dec'
 
 
     # dataset

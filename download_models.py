@@ -27,9 +27,11 @@ def save_encoder (config: Config) -> int:
 
 def save_cg_model (config: Config) -> int:
 	try:
-		model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg")
+		enc_model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_encoder_decoder=True, is_decoder=False)
+		dec_model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_encoder_decoder=True, is_decoder=True, add_cross_attention=True)
 
-		model.save_pretrained(config.pretrained_cg_path)
+		enc_model.save_pretrained(config.pretrained_cg_enc_path)
+		dec_model.save_pretrained(config.pretrained_cg_dec_path)
 	except Exception as e:
 		print (f'Error - {str (e)}')
 		return 1
@@ -37,7 +39,7 @@ def save_cg_model (config: Config) -> int:
 
 def save_lm_decoder (config: Config) -> int:
 	try:
-		model = ProphetNetForCausalLM.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_decoder = True, add_cross_attention=True)
+		model = ProphetNetForCausalLM.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_decoder=True, add_cross_attention=True)
 
 		model.save_pretrained(config.pretrained_decoder_path)
 	except Exception as e:
@@ -98,6 +100,12 @@ if __name__ == '__main__' :
 		
 		if not os.path.exists (config.pretrained_cg_path):
 			os.mkdir (config.pretrained_cg_path)
+		
+		if not os.path.exists (config.pretrained_cg_enc_path):
+			os.mkdir (config.pretrained_cg_enc_path)
+		
+		if not os.path.exists (config.pretrained_cg_dec_path):
+			os.mkdir (config.pretrained_cg_dec_path)
 		
 		save_cg_model (config)
 	
