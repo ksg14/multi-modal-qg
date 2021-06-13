@@ -40,7 +40,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 			for frames, audio_file, context, question_src, question_tgt, question_id, question_str  in tepoch:
 				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
 				
-				tepoch.set_description (f'Validating...')
+				tepoch.set_description (f'Evaluating...')
 
 				if args.logs:
 					print (f'frames - {frames.shape}')
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 		tokenizer = ProphetNetTokenizer.from_pretrained (config.pretrained_tokenizer_path)
 		video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 		
-		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
+		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
 		test_dataloader = DataLoader (test_dataset, batch_size=args.batch_sz, shuffle=False)
 
 	
