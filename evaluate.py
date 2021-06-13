@@ -66,8 +66,8 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 				pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
 
 				predictions.append ({
-					'question_id' : question_id,
-					'gt_question' : question_str, 
+					'question_id' : question_id [0].item (),
+					'gt_question' : question_str [0], 
 					'pred_question' : pred_question_str
 				})
 
