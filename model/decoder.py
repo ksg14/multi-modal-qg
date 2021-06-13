@@ -38,7 +38,7 @@ class ProphetNetCGDecoder (Module):
         self.model = ProphetNetForConditionalGeneration.from_pretrained (dec_path)
     
     def forward (self, context, audio_emb, video_emb, src, tgt):
-        enc_outputs = self.model.prophetnet.get_encoder(input_ids=context.view (1, -1))
+        enc_outputs = self.model.prophetnet.encoder(input_ids=context.view (1, -1))
         enc_emb = torch.cat ([enc_outputs.last_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
         dec_outputs = self.model (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), encoder_outputs=(enc_emb,), return_dict=False)
@@ -46,7 +46,7 @@ class ProphetNetCGDecoder (Module):
         return dec_outputs [0], dec_outputs [1], dec_outputs [7]
     
     def generate (self, context, audio_emb, video_emb, strategy, beams, max_len):
-        enc_outputs = self.model.prophetnet.get_encoder(input_ids=context.view (1, -1))
+        enc_outputs = self.model.prophetnet.encoder(input_ids=context.view (1, -1))
         enc_emb = torch.cat ([enc_outputs.last_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
         if strategy == 'greedy':
