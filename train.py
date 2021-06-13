@@ -55,7 +55,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
-			for frames, audio_file, context, question_src, question_tgt  in tepoch:
+			for frames, audio_file, context, question_src, question_tgt, question_id, question_str  in tepoch:
 				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
 				
 				tepoch.set_description (f'Validating...')
@@ -118,7 +118,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 		dec_model.train ()
 
 		with tqdm(train_dataloader) as tepoch:
-			for frames, audio_file, context, question_src, question_tgt  in tepoch:
+			for frames, audio_file, context, question_src, question_tgt, question_id, question_str  in tepoch:
 				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
 				
 				tepoch.set_description (f'Epoch {epoch}')

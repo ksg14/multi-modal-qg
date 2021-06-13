@@ -59,7 +59,7 @@ class VQGDataset (Dataset):
 
             context = self.prophetnet_transform (f'{answer_str} [SEP] {context_str}', return_tensors='pt')
 
-            return frames, audio_file, context.input_ids, question_src, question_tgt
+            return frames, audio_file, context.input_ids, question_src, question_tgt, question_id, question_str
 
 # if __name__ == '__main__':
 #     train_dataset = VQGDataset (config.train_file, vocab_file, config.salient_frames_path, config.salient_audio_path, prepare_sequence)
