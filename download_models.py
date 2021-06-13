@@ -27,8 +27,8 @@ def save_encoder (config: Config) -> int:
 
 def save_cg_model (config: Config) -> int:
 	try:
-		enc_model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_encoder_decoder=True, is_decoder=False)
-		dec_model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_encoder_decoder=True, is_decoder=True, add_cross_attention=True)
+		enc_model = ProphetNetEncoder.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg", is_decoder=False)
+		dec_model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased-squad-qg")
 
 		enc_model.save_pretrained(config.pretrained_cg_enc_path)
 		dec_model.save_pretrained(config.pretrained_cg_dec_path)

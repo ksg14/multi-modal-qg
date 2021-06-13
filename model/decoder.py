@@ -11,7 +11,7 @@ class ProphetNetDecoder (Module):
         super().__init__()
         self.out_attentions = out_attentions
 
-        self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path, is_encoder_decoder=True, is_decoder = True, add_cross_attention=True)
+        self.decoder = ProphetNetForConditionalGeneration.from_pretrained (dec_path)
     
     def forward (self, src, tgt, enc_out):
         outputs = self.decoder (decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_attentions=self.out_attentions, encoder_hidden_states=enc_out)
