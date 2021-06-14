@@ -224,7 +224,7 @@ class VideoDecoder (Module):
         self.emb_layer = emb_layer
         self.device = device
 
-        self.video_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
+        self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         self.dropout = Dropout (self.dropout_p)
         self.lstm = LSTM (self.word_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
