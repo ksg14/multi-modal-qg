@@ -248,6 +248,8 @@ if __name__ == '__main__':
 
 	text_dec = ProphetNetCG (config.pretrained_cg_dec_path)
 
+	print (f'bos - {text_dec.model.config.bos_token_id}')
+
 	emb_layer = text_dec.model.get_input_embeddings ()
 
 	audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
