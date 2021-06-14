@@ -157,6 +157,8 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 				text_out, text_last_hidden = text_dec (context, question_src, question_tgt)				
 
 				audio_dec_hidden = audio_dec.init_state (1)
+				video_dec_hidden = video_dec.init_state (1)
+
 				for dec_i in range (question_src.shape [2]):
 					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], n_frames, padded_audio_emb, audio_dec_hidden)
 
