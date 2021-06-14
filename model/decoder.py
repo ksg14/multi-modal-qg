@@ -15,9 +15,9 @@ class ProphetNetCG (Module):
         self.model = ProphetNetForConditionalGeneration.from_pretrained (dec_path)
     
     def forward (self, context, src, tgt):
-        outputs = self.model (input_ids=context.view (1, -1), decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_hidden_states=True)
+        outputs = self.model (input_ids=context.view (1, -1), decoder_input_ids=src.view (1, -1), labels=tgt.view (1, -1), output_hidden_states=False)
         
-        return outputs.logits, outputs.decoder_hidden_states [-1]
+        return outputs.logits
     
     def generate (self, context, strategy, beams, max_len):
         if strategy == 'greedy':
