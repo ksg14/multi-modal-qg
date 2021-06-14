@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, orthogonal_, normal_
 
 from transformers import ProphetNetForCausalLM, ProphetNetForConditionalGeneration
+from transformers.file_utils import ModelOutput
 
 class ProphetNetDecoder (Module):
     def __init__(self, dec_path, out_attentions=False):
@@ -50,9 +51,9 @@ class ProphetNetCGDecoder (Module):
         enc_emb = torch.cat ([enc_outputs.last_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
         if strategy == 'greedy':
-            out_ids = self.model.generate (encoder_outputs=(enc_emb,), max_length=max_len)
+            out_ids = self.model.generate (encoder_outputs=ModelOutput (last_hidden_state=enc_emb), max_length=max_len)
         elif strategy == 'beam':
-            out_ids = self.model.generate (encoder_outputs=(enc_emb,), max_length=max_len, num_beams=beams, early_stopping=True)
+            out_ids = self.model.generate (encoder_outputs=ModelOutput (last_hidden_state=enc_emb), max_length=max_len, num_beams=beams, early_stopping=True)
 
         return out_ids
 

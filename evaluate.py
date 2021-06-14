@@ -170,6 +170,8 @@ if __name__ == '__main__':
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
+		elif args.pretrained:
+			out_file_path = config.output_path / f'pretrained_predictions_{args.strategy}.json'
 		else:
 			out_file_path = config.output_path / f'best_predictions_{args.strategy}.json'
 
