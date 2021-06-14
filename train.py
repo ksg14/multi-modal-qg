@@ -147,8 +147,8 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
 				n_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_len-n_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_len-n_frames))
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-n_frames))
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-n_frames))
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
