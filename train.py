@@ -175,7 +175,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
 
-				text_out, text_last_hidden = text_dec (context, question_src, question_tgt)				
+				text_out = text_dec (context, question_src, question_tgt)				
 
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
