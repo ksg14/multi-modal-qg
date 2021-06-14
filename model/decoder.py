@@ -281,9 +281,8 @@ class GenerationHead (Module):
         self.initialise_weights ()
 
     def forward(self, audio_out, video_out, text_out):
-        # output = self.out_layer(output[0])
-        # return output, hidden, vid_attn_weights
-        return None
+        output = self.out_layer(torch.cat ([audio_out, video_out, text_out], dim=1))
+        return output
     
     def initialise_weights (self):
         xavier_uniform_ (self.out_layer.weight)

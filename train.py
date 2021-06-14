@@ -15,7 +15,7 @@ import pickle
 import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder, ProphetNetTextEncoder
-from model.decoder import AttnDecoder, Decoder, ProphetNetCG, AudioDecoder, VideoDecoder
+from model.decoder import AttnDecoder, Decoder, GenerationHead, ProphetNetCG, AudioDecoder, VideoDecoder
 
 from transformers import ProphetNetTokenizer
 
@@ -114,7 +114,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 	# return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 	return val_loss
 
-def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dataloader, val_dataloader, av_enc_optimizer, text_dec_optimizer, audio_dec_optimizer, video_dec_optimizer, device):
+def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head, criterion, train_dataloader, val_dataloader, av_enc_optimizer, text_dec_optimizer, audio_dec_optimizer, video_dec_optimizer, gen_head_optimizer, device):
 	epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
 	n_len = len (train_dataloader)
 	best_epoch_loss = float ('inf')
@@ -126,6 +126,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 		text_dec.train ()
 		audio_dec.train ()
 		video_dec.train ()
+		gen_head.train ()
 
 		with tqdm(train_dataloader) as tepoch:
 			for frames, audio_file, context, question_src, question_tgt, question_id, question_str  in tepoch:
@@ -137,6 +138,8 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 				text_dec_optimizer.zero_grad ()
 				audio_dec_optimizer.zero_grad()
 				video_dec_optimizer.zero_grad()
+				gen_head.zero_grad()
+				loss = 0
 
 				if args.logs:
 					print (f'frames - {frames.shape}')
@@ -168,20 +171,23 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 					if args.logs:
 						print(f'audio out - {audio_dec_output.shape}')
 						print(f'video out - {video_dec_output.shape}')
-						print(f'text out - {text_out.shape}')
+						print(f'text out - {text_out [0][dec_i].shape}')
+					
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i])
+					
+					loss += criterion (gen_out, question_tgt [0][0][dec_i].view (-1))
 
-					# loss += criterion (dec_output, target [0][di].view (-1))
-
-				# if args.logs:
-				# 	print (f'loss - {dec_loss / n_len}')
+				if args.logs:
+					print (f'loss - {loss.item () / n_len}')
 
 				# dec_loss.backward()
 				break
 
 				av_enc_optimizer.step()
-				text_dec_optimizer.step ()
+				text_dec_optimizer.step()
 				audio_dec_optimizer.step()
 				video_dec_optimizer.step()
+				gen_head.step()
 
 				with torch.no_grad():
 					epoch_stats ['train']['loss'] [-1] += (dec_loss.item () / n_len)
@@ -257,21 +263,29 @@ if __name__ == '__main__':
 
 	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
+	gen_head = GenerationHead (enc_emb_dim=config.prophetnet_vocab*3, n_vocab=config.prophetnet_vocab, device=device)
+
 	av_enc_model.to (device)
 	text_dec.to (device)
 	audio_dec.to (device)
 	video_dec.to (device)
+	gen_head.to (device)
+
+	criterion = CrossEntropyLoss()
 
 	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
 	text_dec_optimizer = Adam(text_dec.parameters(), lr=args.lr)
 	audio_dec_optimizer = Adam(audio_dec.parameters(), lr=args.lr)
 	video_dec_optimizer = Adam(video_dec.parameters(), lr=args.lr)
+	gen_head_optimizer = Adam(gen_head.parameters(), lr=args.lr)
 
 	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, \
 									text_dec=text_dec, audio_dec=audio_dec, video_dec=video_dec, \
-									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-									av_enc_optimizer=av_enc_optimizer, text_dec_optimizer=text_dec_optimizer, \
-									audio_dec_optimizer=audio_dec_optimizer, video_dec_optimizer=video_dec_optimizer, device=device)
+									gen_head=gen_head, train_dataloader=train_dataloader, \
+									val_dataloader=val_dataloader, av_enc_optimizer=av_enc_optimizer, \
+									ext_dec_optimizer=text_dec_optimizer, audio_dec_optimizer=audio_dec_optimizer, \
+									gen_head_optimizer=gen_head_optimizer, video_dec_optimizer=video_dec_optimizer, \
+									criterion=criterion, device=device)
 
 	# validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
 		
