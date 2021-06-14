@@ -283,7 +283,7 @@ if __name__ == '__main__':
 									text_dec=text_dec, audio_dec=audio_dec, video_dec=video_dec, \
 									gen_head=gen_head, train_dataloader=train_dataloader, \
 									val_dataloader=val_dataloader, av_enc_optimizer=av_enc_optimizer, \
-									ext_dec_optimizer=text_dec_optimizer, audio_dec_optimizer=audio_dec_optimizer, \
+									text_dec_optimizer=text_dec_optimizer, audio_dec_optimizer=audio_dec_optimizer, \
 									gen_head_optimizer=gen_head_optimizer, video_dec_optimizer=video_dec_optimizer, \
 									criterion=criterion, device=device)
 
