@@ -12,17 +12,11 @@ class Config():
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
         
-        if not os.path.exists(self.text_enc_model_path):
-            os.makedirs(self.text_enc_model_path)
+        if not os.path.exists(self.text_model_path):
+            os.makedirs(self.text_model_path)
         
-        if not os.path.exists(self.dec_model_path):
-            os.makedirs(self.dec_model_path)
-        
-        if not os.path.exists(self.last_text_enc_model_path):
-            os.makedirs(self.last_text_enc_model_path)
-        
-        if not os.path.exists(self.last_dec_model_path):
-            os.makedirs(self.last_dec_model_path)
+        if not os.path.exists(self.last_text_model_path):
+            os.makedirs(self.last_text_model_path)
 
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)
@@ -30,10 +24,11 @@ class Config():
     # results
     output_path = Path (r'results/exp-vqg_multi-1/')
     av_model_path = output_path / 'av_model.pth'
-    text_enc_model_path = output_path / 'text_enc_model'
-    dec_model_path = output_path / 'dec_model'
-    last_text_enc_model_path = output_path / 'last_text_enc_model'
-    last_dec_model_path = output_path / 'last_dec_model'
+    text_model_path = output_path / 'text_model'
+    audio_model_path = output_path / 'audio_model.pth'
+    video_model_path = output_path / 'video_model.pth'
+    gen_head_model_path = output_path / 'gen_head_model.pth'
+    last_text_model_path = output_path / 'last_text_model'
     stats_json_path = output_path / 'stats.json'
     stats_pkl_path = output_path / 'stats.pkl'
     learned_weight_path = output_path / 'learned_weight.pt'

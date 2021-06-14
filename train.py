@@ -48,7 +48,7 @@ def get_mem_usage (model):
 	mem_usage = (mem_params + mem_bufs) / (1024 * 1024)
 	return mem_usage
 
-def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader, device):
+def validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head, criterion, dataloader, device):
 	val_loss = 0.0
 	# val_bleu = 0.0
 	# val_bleu_1 = 0.0
@@ -58,8 +58,10 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 	n_len = len (dataloader)
 		
 	av_enc_model.eval () 
-	# text_enc_model.eval ()
-	dec_model.eval ()
+	text_dec.eval ()
+	audio_dec.eval ()
+	video_dec.eval ()
+	gen_head.eval ()
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
@@ -67,6 +69,8 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 				frames, audio_file, context, question_src, question_tgt = frames.to (device), audio_file, context.to (device), question_src.to (device), question_tgt.to (device)
 				
 				tepoch.set_description (f'Validating...')
+
+				loss = 0
 
 				if args.logs:
 					print (f'frames - {frames.shape}')
@@ -76,25 +80,38 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-				# enc_hidden_state, enc_attn = text_enc_model (context)
+				audio_frames = audio_emb.shape [0]
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-audio_frames))
+				video_frames = video_emb.shape [0]
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
-					# print (f'enc hidden - {enc_hidden_state.shape}')
 
-				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+				text_out, text_last_hidden = text_dec (context, question_src, question_tgt)				
 
-				# if args.logs:
-				# 	print (f'enc out - {enc_out.shape}')
+				audio_dec_hidden = audio_dec.init_state (1)
+				video_dec_hidden = video_dec.init_state (1)
 
-				# dec_loss, dec_logits, dec_attn = dec_model (question_src, question_tgt, enc_out)
-				dec_loss, dec_logits = dec_model (context, audio_emb, video_emb, question_src, question_tgt)
+				for dec_i in range (question_src.shape [2]):
+					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
+
+					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
+
+					if args.logs:
+						print(f'audio out - {audio_dec_output.shape}')
+						print(f'video out - {video_dec_output.shape}')
+						print(f'text out - {text_out [0][dec_i].shape}')
+					
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i])
+					
+					loss += criterion (gen_out, question_tgt [0][0][dec_i].view (-1))
 
 				if args.logs:
-					print (f'loss - {dec_loss / n_len}')
+					print (f'loss - {loss.item () / n_len}')
 				
-				val_loss += dec_loss
+				val_loss += loss.item () / question_src.shape [2]
 
 				# question_str_list = question [0].split ()
 				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
@@ -180,8 +197,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				if args.logs:
 					print (f'loss - {loss.item () / n_len}')
 
-				# dec_loss.backward()
-				break
+				loss.backward()
 
 				av_enc_optimizer.step()
 				text_dec_optimizer.step()
@@ -190,12 +206,12 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				gen_head.step()
 
 				with torch.no_grad():
-					epoch_stats ['train']['loss'] [-1] += (dec_loss.item () / n_len)
+					epoch_stats ['train']['loss'] [-1] += ((loss.item () / question_src.shape [2]) / n_len)
 				
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
 				# break
-		break
-		val_loss = validate (args, config, av_enc_model, text_enc_model, dec_model, val_dataloader, device)
+		# break
+		val_loss = validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head, criterion, val_dataloader, device)
 		epoch_stats ['val']['loss'].append (val_loss)
 		# epoch_stats ['val']['bleu'].append (val_bleu)
 		# epoch_stats ['val']['bleu_1'].append (val_bleu_1)
@@ -210,15 +226,19 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 
 			print ('Saving new best model !')
 			save_model (av_enc_model, config.av_model_path)
-			# text_enc_model.save_model (config.text_enc_model_path)
-			dec_model.save_model (config.dec_model_path)
+			save_model (audio_dec, config.audio_model_path)
+			save_model (video_dec, config.video_model_path)
+			save_model (gen_head, config.gen_head_model_path)
+			text_dec.save_model (config.text_model_path)
 		
 		# Save last epoch model
 		if epoch == args.epochs-1:
 			print ('Saving last epoch model !')
 			save_model (av_enc_model, config.output_path / 'last_av_model.pth')
-			# text_enc_model.save_model (config.last_text_enc_model_path)
-			dec_model.save_model (config.last_dec_model_path)
+			save_model (audio_dec, config.output_path / 'last_audio.pth')
+			save_model (video_dec, config.output_path / 'last_video.pth')
+			save_model (gen_head, config.output_path / 'last_gen_head.pth')
+			text_dec.save_model (config.last_text_model_path)
 
 	return epoch_stats, best_epoch
 
