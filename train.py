@@ -248,9 +248,9 @@ if __name__ == '__main__':
 
 	emb_layer = text_dec.model.get_input_embeddings ()
 
-	audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.glove_emb_dim, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+	audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
-	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.glove_emb_dim, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
 	av_enc_model.to (device)
 	text_dec.to (device)
@@ -262,7 +262,8 @@ if __name__ == '__main__':
 	audio_dec_optimizer = Adam(audio_dec.parameters(), lr=args.lr)
 	video_dec_optimizer = Adam(video_dec.parameters(), lr=args.lr)
 
-	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, text_dec=text_dec, audio_dec=audio_dec, video_dec=video_dec, \
+	epoch_stats, best_epoch = train (args=args, config=config, av_enc_model=av_enc_model, \
+									text_dec=text_dec, audio_dec=audio_dec, video_dec=video_dec, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
 									av_enc_optimizer=av_enc_optimizer, text_dec_optimizer=text_dec_optimizer, \
 									audio_dec_optimizer=audio_dec_optimizer, video_dec_optimizer=video_dec_optimizer, device=device)
