@@ -200,7 +200,8 @@ if __name__ == '__main__':
 									hidden_dim=config.dec_lstm_hidden_dim, \
 									n_vocab=n_vocab, \
 									word_emb_dim=emb_dim, \
-									av_emb_dim=config.av_hidden_dim, \
+									video_emb_dim=config.video_hidden_dim, \
+                        			audio_emb_dim=config.audio_emb, \
 									emb_layer=emb_layer, \
 									text_max_length=config.context_max_lenth, \
                         			av_max_length=config.av_max_length,
