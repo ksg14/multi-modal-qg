@@ -271,7 +271,7 @@ class VideoDecoder (Module):
 
 class GenerationHead (Module):
     def __init__(self, enc_emb_dim, n_vocab, device):
-        super(AttnDecoder, self).__init__()
+        super().__init__()
         self.enc_emb_dim = enc_emb_dim
         self.n_vocab = n_vocab
         self.device = device
