@@ -155,7 +155,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				text_dec_optimizer.zero_grad ()
 				audio_dec_optimizer.zero_grad()
 				video_dec_optimizer.zero_grad()
-				gen_head.zero_grad()
+				gen_head_optimizer.zero_grad()
 				loss = 0
 
 				if args.logs:
@@ -203,7 +203,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				text_dec_optimizer.step()
 				audio_dec_optimizer.step()
 				video_dec_optimizer.step()
-				gen_head.step()
+				gen_head_optimizer.step()
 
 				with torch.no_grad():
 					epoch_stats ['train']['loss'] [-1] += ((loss.item () / question_src.shape [2]) / n_len)
