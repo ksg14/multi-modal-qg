@@ -28,7 +28,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-prophetnet_cg-1/')
+    output_path = Path (r'results/exp-vqg_multi-1/')
     av_model_path = output_path / 'av_model.pth'
     text_enc_model_path = output_path / 'text_enc_model'
     dec_model_path = output_path / 'dec_model'
