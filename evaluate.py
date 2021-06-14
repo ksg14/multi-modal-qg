@@ -155,7 +155,7 @@ if __name__ == '__main__':
 		config = None
 
 	if config:
-		device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+		device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 		print(f'Device - {device}')
 
 		# weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 	
 		emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, True)	
 
-		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.av_hidden_dim, config.flatten_dim, device=device)
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, device=device)
 		
 		if args.last:
 			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
