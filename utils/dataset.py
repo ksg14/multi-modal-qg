@@ -54,9 +54,9 @@ class VQGDataset (Dataset):
         if self.prophetnet_transform:
             question = self.prophetnet_transform (question_str, return_tensors='pt')
 
-            print (f'q ids - {question.input_ids}')
-            print (f'start - {self.prophetnet_transform.decode (question.input_ids [0][0])}')
-            print (f'end - {self.prophetnet_transform.decode (question.input_ids [0][-1])}')
+            # print (f'q ids - {question.input_ids}')
+            # print (f'start - {self.prophetnet_transform.decode (question.input_ids [0][0])}')
+            # print (f'end - {self.prophetnet_transform.decode (question.input_ids [0][-1])}')
 
             question_src = question.input_ids [:, :-1]
             question_tgt = question.input_ids [:, 1:]

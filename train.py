@@ -146,9 +146,10 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
 
-				n_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-n_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-n_frames))
+				audio_frames = audio_emb.shape [0]
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-audio_frames))
+				video_frames = video_emb.shape [0]
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
@@ -160,9 +161,9 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, train_dat
 				video_dec_hidden = video_dec.init_state (1)
 
 				for dec_i in range (question_src.shape [2]):
-					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], n_frames, padded_audio_emb, audio_dec_hidden)
+					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
 
-					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], n_frames, padded_video_emb, video_dec_hidden)
+					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
 
 					if args.logs:
 						print(f'audio out - {audio_dec_output.shape}')
@@ -248,7 +249,7 @@ if __name__ == '__main__':
 
 	text_dec = ProphetNetCG (config.pretrained_cg_dec_path)
 
-	print (f'bos - {text_dec.model.config.bos_token_id}')
+	# print (f'bos - {text_dec.model.config.bos_token_id}')
 
 	emb_layer = text_dec.model.get_input_embeddings ()
 
