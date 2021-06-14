@@ -212,7 +212,7 @@ class AudioDecoder (Module):
         # normal_ (self.attn_combine.bias)
 
 class VideoDecoder (Module):
-    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, emb_layer, av_max_length, device):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, video_emb_dim, emb_layer, av_max_length, device):
         super().__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
@@ -220,6 +220,7 @@ class VideoDecoder (Module):
         self.dropout_p = dropout_p
         self.av_max_length = av_max_length
         self.word_emb_dim = word_emb_dim
+        self.video_emb_dim = video_emb_dim
         self.emb_layer = emb_layer
         self.device = device
 
