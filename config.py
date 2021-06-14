@@ -84,30 +84,33 @@ class Config():
 
     # hyper-params
     optim='adam' # sgd, adam
-    audio_emb = 128
-    av_emb = 128 + 400
-    vid_mean = [0.43216, 0.394666, 0.37645]
-    vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
     context_max_lenth = 283
     av_max_length = 101
-    # Video encoder
+    
+    # Audio
+    audio_emb = 128
+    av_emb = 128 + 400
+    audio_dec_hidden = 512
+    audio_dec_layers = 2
+    audio_dec_dropout = 0.2
+    
+    # Video
+    vid_mean = [0.43216, 0.394666, 0.37645]
+    vid_std = [0.22803, 0.22145, 0.216989]
     av_in_channels = 3
     av_kernel_sz = 3
     av_stride = 1
     video_hidden_dim = 512
     flatten_dim = 1000
-    # text encoder
-    text_lstm_hidden_dim = 512
-    text_lstm_layers = 3
-    text_lstm_dropout = 0.2
-    text_non_trainable = False
-    # decoder
-    prophetnet_hidden_sz = 1024
-    dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 3
-    dec_lstm_dropout = 0.2
+    video_dec_hidden = 512
+    video_dec_layers = 2
+    video_dec_dropout = 0.2
     
+    # prophetnet
+    prophetnet_hidden_sz = 1024
+    prophetnet_vocab = 30522
+
     # checkpoints
     best_epoch = None
 
