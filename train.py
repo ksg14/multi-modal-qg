@@ -15,7 +15,7 @@ import pickle
 import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder, ProphetNetTextEncoder
-from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder, ProphetNetCGDecoder, ProphetNetCG, AudioDecoder, VideoDecoder
+from model.decoder import AttnDecoder, Decoder, ProphetNetCG, AudioDecoder, VideoDecoder
 
 from transformers import ProphetNetTokenizer
 
