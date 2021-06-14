@@ -69,7 +69,7 @@ def evaluate (av_enc_model, text_enc_model, dec_model, dataloader, context_max_l
 				pred_words = []
 
 				for di in range(pred_max_len):
-					dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, audio_emb, None, dec_hidden, None)
+					dec_output, dec_hidden, text_attn, vid_attn = dec_model (dec_input, n_frames, context_len, padded_audio_emb, None, dec_hidden, None)
 					# loss += criterion (dec_output, target [0][di].view (-1))
 					
 					if strategy == 'greedy':

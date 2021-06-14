@@ -122,7 +122,7 @@ class AudioVideoEncoder (Module):
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file)
         # audio_emb = audio_out.view (1, -1)
-        print (f'audio_emb shape - {audio_emb.shape}')
+        # print (f'audio_emb shape - {audio_emb.shape}')
 
         # video_emb = self.video_enc (video_frames).squeeze ()
         # print (f'video emb shape - {video_emb.shape}')
