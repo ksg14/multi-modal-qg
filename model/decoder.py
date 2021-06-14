@@ -75,7 +75,7 @@ class Decoder (Module):
 
 class AttnDecoder (Module):
     def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, video_emb_dim, audio_emb_dim, emb_layer, text_max_length, av_max_length, device):
-        super(AttnDecoder, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.n_vocab = n_vocab
@@ -153,7 +153,7 @@ class AttnDecoder (Module):
 
 class AudioDecoder (Module):
     def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, audio_emb_dim, emb_layer, av_max_length, device):
-        super(AttnDecoder, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.n_vocab = n_vocab
@@ -213,7 +213,7 @@ class AudioDecoder (Module):
 
 class VideoDecoder (Module):
     def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, emb_layer, av_max_length, device):
-        super(AttnDecoder, self).__init__()
+        super().__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.n_vocab = n_vocab
