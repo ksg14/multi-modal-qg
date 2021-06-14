@@ -14,7 +14,7 @@ import pickle
 import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder, ProphetNetTextEncoder
-from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder
+from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder, ProphetNetCGDecoder
 
 from transformers import ProphetNetTokenizer
 
@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, dataloader, device):
+def evaluate (args, config, tokenizer, av_enc_model, dec_model, dataloader, device):
 	# val_bleu = 0.0
 	# val_bleu_1 = 0.0
 	# val_bleu_2 = 0.0
@@ -49,20 +49,18 @@ def evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, 
 					print (f'question tgt - {question_tgt.shape}')
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
-
-				enc_hidden_state, enc_attn = text_enc_model (context)
 				
 				if args.logs:
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
-					print (f'enc hidden - {enc_hidden_state.shape}')
+					# print (f'enc hidden - {enc_hidden_state.shape}')
 
-				enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
+				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
 
-				if args.logs:
-					print (f'enc out - {enc_out.shape}')
+				# if args.logs:
+					# print (f'enc out - {enc_out.shape}')
 
-				pred_question_ids = dec_model.generate (enc_out=enc_out, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
+				pred_question_ids = dec_model.generate (context=context, audio_emb=audio_emb, video_emb=video_emb, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
 				pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
 
 				predictions.append ({
@@ -146,14 +144,14 @@ if __name__ == '__main__':
 		
 		av_enc_model.eval ()
 
-		enc_path = config.text_enc_model_path
-		if args.last:
-			enc_path = config.last_text_enc_model_path
-		if args.pretrained:
-			enc_path = config.pretrained_cg_enc_path
+		# enc_path = config.text_enc_model_path
+		# if args.last:
+		# 	enc_path = config.last_text_enc_model_path
+		# if args.pretrained:
+		# 	enc_path = config.pretrained_cg_enc_path
 
-		text_enc_model = ProphetNetTextEncoder (enc_path)
-		text_enc_model.eval()
+		# text_enc_model = ProphetNetTextEncoder (enc_path)
+		# text_enc_model.eval()
 
 		dec_path = config.dec_model_path
 		if args.last:
@@ -161,14 +159,14 @@ if __name__ == '__main__':
 		if args.pretrained:
 			dec_path = config.pretrained_cg_dec_path
 
-		dec_model = ProphetNetDecoder (dec_path)
+		dec_model = ProphetNetCGDecoder (dec_path)
 		dec_model.eval ()
 
 		av_enc_model.to (device)
-		text_enc_model.to (device)
+		# text_enc_model.to (device)
 		dec_model.to (device)
 
-		predictions = evaluate (args, config, tokenizer, av_enc_model, text_enc_model, dec_model, test_dataloader, device)
+		predictions = evaluate (args, config, tokenizer, av_enc_model, dec_model, test_dataloader, device)
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
