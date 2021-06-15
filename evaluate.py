@@ -192,7 +192,7 @@ if __name__ == '__main__':
 		device = torch.device(args.device)
 		print(f'Device - {device}')
 
-		tokenizer = ProphetNetTokenizer.from_pretrained (config.pretrained_tokenizer_path)
+		tokenizer = ProphetNetTokenizer.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
 		video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 		
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
