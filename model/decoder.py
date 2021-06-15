@@ -175,6 +175,9 @@ class AudioDecoder (Module):
     def forward(self, word, enc_frames, audio_emb, hidden):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
+        print (f'dim - {self.word_emb_dim}')
+        print (f'word emb - {embedded.shape}') 
+
         # Audio attention
         audio_attn_pre_soft = self.audio_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
         audio_attn_pre_soft [enc_frames:] = float ('-inf')
