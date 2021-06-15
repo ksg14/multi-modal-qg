@@ -34,7 +34,6 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 	predictions = []
-	pred_ids = []
 
 	av_enc_model.eval () 
 	text_dec.eval ()
@@ -84,6 +83,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 
 				dec_input = torch.tensor([[tokenizer.encode (tokenizer.cls_token, add_special_tokens=False)]]).to (device)
 
+				pred_ids = []
 				for dec_i in range (text_out_len):
 					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (dec_input, audio_frames, padded_audio_emb, audio_dec_hidden)
 
@@ -107,29 +107,13 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 
 				if args.logs:
 					print (f'pred ids {pred_ids}')
-				# pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
+				pred_question_str = tokenizer.decode(pred_ids, skip_special_tokens=True)
 
-				# audio_dec_hidden = audio_dec.init_state (1)
-				# video_dec_hidden = video_dec.init_state (1)
-
-				# for dec_i in range (question_src.shape [2]):
-				# 	audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
-
-				# 	video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
-
-				# 	if args.logs:
-				# 		print(f'audio out - {audio_dec_output.shape}')
-				# 		print(f'video out - {video_dec_output.shape}')
-				# 		print(f'text out - {text_out [0][dec_i].shape}')
-					
-				# 	gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i])
-
-				# predictions.append ({
-				# 	'question_id' : question_id [0].item (),
-				# 	'gt_question' : question_str [0], 
-				# 	'pred_question' : pred_question_str
-				# })
-
+				predictions.append ({
+					'question_id' : question_id [0].item (),
+					'gt_question' : question_str [0], 
+					'pred_question' : pred_question_str
+				})
 
 				# question_str_list = question [0].split ()
 				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
