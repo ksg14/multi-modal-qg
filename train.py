@@ -121,7 +121,7 @@ def validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_he
 				# val_bleu += sentence_bleu (question_str_list, pred_words)
 				tepoch.set_postfix (val_loss=(val_loss / n_len))
 		
-		val_loss = val_loss.item () / n_len
+		val_loss = val_loss / n_len
 		# val_bleu /= n_len
 		# val_bleu_1 /= n_len 
 		# val_bleu_2 /= n_len
