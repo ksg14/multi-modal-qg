@@ -82,7 +82,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
 
-				dec_input = torch.tensor([[tokenizer.encode ('[CLS]')]]).to (device)
+				dec_input = torch.tensor([[tokenizer.encode (tokenizer.cls_token)]]).to (device)
 
 				for dec_i in range (text_out_len):
 					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (dec_input, audio_frames, padded_audio_emb, audio_dec_hidden)
@@ -193,6 +193,7 @@ if __name__ == '__main__':
 		print(f'Device - {device}')
 
 		tokenizer = ProphetNetTokenizer.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
+
 		video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 		
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
