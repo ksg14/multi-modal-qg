@@ -74,13 +74,15 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 
 				text_out = text_dec.generate (context=context, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
 				
+				text_out_len = len (text_out.scores)
+
 				if args.logs:
 					print (f'text scores - {len (text_out.scores)}')
 				
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
 
-				for dec_i in range (question_src.shape [2]):
+				for dec_i in range (text_out_len):
 					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
 
 					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
