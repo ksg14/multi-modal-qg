@@ -75,7 +75,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				text_out = text_dec.generate (context=context, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
 				
 				if args.logs:
-					print (f'text scores - {text_out.scores [0].shape}')
+					print (f'text scores - {len (text_out.scores)}')
 				
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
@@ -88,9 +88,9 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 					if args.logs:
 						print(f'audio out - {audio_dec_output.shape}')
 						print(f'video out - {video_dec_output.shape}')
-						print(f'text out - {text_out [dec_i].shape}')
+						print(f'text out - {text_out.scores [dec_i].shape}')
 					
-					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [dec_i])
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out.scores [dec_i])
 
 					next_word = F.log_softmax (gen_out)
 
