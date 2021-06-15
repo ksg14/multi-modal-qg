@@ -63,8 +63,8 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
 
 				if args.logs:
-					print (f'audio emb - {audio_emb.shape}')
-					print (f'video emb - {video_emb.shape}')
+					print (f'audio emb - {padded_audio_emb.shape}')
+					print (f'video emb - {padded_video_emb.shape}')
 					# print (f'enc hidden - {enc_hidden_state.shape}')
 
 				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
