@@ -21,11 +21,11 @@ class ProphetNetCG (Module):
     
     def generate (self, context, strategy, beams, max_len):
         if strategy == 'greedy':
-            ids = self.model.generate (input_ids=context.view (1, -1), max_length=max_len) # return_dict_in_generate=True
+            out = self.model.generate (input_ids=context.view (1, -1), max_length=max_len, return_dict_in_generate=True, output_scores=True) # return_dict_in_generate=True
         elif strategy == 'beam':
-            ids = self.model.generate (input_ids=context.view (1, -1), max_length=max_len, num_beams=beams, early_stopping=True)
+            out = self.model.generate (input_ids=context.view (1, -1), max_length=max_len, num_beams=beams, early_stopping=True, return_dict_in_generate=True, output_scores=True)
 
-        return ids 
+        return out 
 
     def save_model (self, save_path):
         print (f'Saving model to {save_path}')
