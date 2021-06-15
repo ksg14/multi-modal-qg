@@ -82,10 +82,12 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
 
-				for dec_i in range (text_out_len):
-					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
+				dec_input = torch.tensor([[tokenizer.decode ['[CLS]']]]).to (device)
 
-					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
+				for dec_i in range (text_out_len):
+					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (dec_input, audio_frames, padded_audio_emb, audio_dec_hidden)
+
+					video_dec_output, video_dec_hidden, video_attn= video_dec (dec_input, video_frames, padded_video_emb, video_dec_hidden)
 
 					if args.logs:
 						print(f'audio out - {audio_dec_output.shape}')
@@ -97,8 +99,11 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 					next_word = torch.argmax (F.log_softmax (gen_out), dim=1)
 
 					if args.logs:
-						print (f'next word - {next_word.shape}')
-					pred_ids.append (next_word [0])
+						print (f'next word - {next_word}')
+
+					dec_input = next_word.unsqueeze (0).detach ()
+
+					pred_ids.append (next_word.item ())
 
 				if args.logs:
 					print (f'pred ids {pred_ids}')
