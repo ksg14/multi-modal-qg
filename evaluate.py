@@ -82,7 +82,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
 
-				dec_input = torch.tensor([[tokenizer.decode ['[CLS]']]]).to (device)
+				dec_input = torch.tensor([[tokenizer.decode ('[CLS]')]]).to (device)
 
 				for dec_i in range (text_out_len):
 					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (dec_input, audio_frames, padded_audio_emb, audio_dec_hidden)
