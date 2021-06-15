@@ -94,12 +94,14 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 					
 					gen_out = gen_head (audio_dec_output, video_dec_output, text_out.scores [dec_i])
 
-					next_word = F.log_softmax (gen_out)
+					next_word = torch.argmax (F.log_softmax (gen_out), dim=1)
 
 					if args.logs:
 						print (f'next word - {next_word.shape}')
-					# pred_ids.append ()
+					pred_ids.append (next_word [0])
 
+				if args.logs:
+					print (f'pred ids {pred_ids}')
 				# pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
 
 				# audio_dec_hidden = audio_dec.init_state (1)
