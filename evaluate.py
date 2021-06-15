@@ -150,11 +150,13 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	try:
-		config = Config (args.config_path)
-	except Exception as e:
-		print (f' Config load error {str (e)}')
-		config = None
+	# try:
+	# 	config = Config (args.config_path)
+	# except Exception as e:
+	# 	print (f' Config load error {str (e)}')
+	# 	config = None
+
+	config= Config ()
 
 	if config:
 		device = torch.device(args.device)
