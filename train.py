@@ -104,7 +104,7 @@ def validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_he
 						print(f'video out - {video_dec_output.shape}')
 						print(f'text out - {text_out [0][dec_i].shape}')
 					
-					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i])
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i].unsqueeze (0))
 					
 					loss += criterion (gen_out, question_tgt [0][0][dec_i].view (-1))
 
@@ -190,7 +190,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 						print(f'video out - {video_dec_output.shape}')
 						print(f'text out - {text_out [0][dec_i].shape}')
 					
-					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i])
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i].unsqueeze (0))
 					
 					loss += criterion (gen_out, question_tgt [0][0][dec_i].view (-1))
 

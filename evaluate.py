@@ -34,6 +34,7 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 	predictions = []
+	pred_ids = []
 
 	av_enc_model.eval () 
 	text_dec.eval ()
@@ -74,8 +75,28 @@ def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_
 				text_out = text_dec.generate (context=context, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
 				
 				if args.logs:
-					print (f'text type - {text_out.type}')
 					print (f'text scores - {text_out.scores [0].shape}')
+				
+				audio_dec_hidden = audio_dec.init_state (1)
+				video_dec_hidden = video_dec.init_state (1)
+
+				for dec_i in range (question_src.shape [2]):
+					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (question_src [0][0][dec_i], audio_frames, padded_audio_emb, audio_dec_hidden)
+
+					video_dec_output, video_dec_hidden, video_attn= video_dec (question_src [0][0][dec_i], video_frames, padded_video_emb, video_dec_hidden)
+
+					if args.logs:
+						print(f'audio out - {audio_dec_output.shape}')
+						print(f'video out - {video_dec_output.shape}')
+						print(f'text out - {text_out [dec_i].shape}')
+					
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [dec_i])
+
+					next_word = F.log_softmax (gen_out)
+
+					if args.logs:
+						print (f'next word - {next_word.shape}')
+					# pred_ids.append ()
 
 				# pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
 

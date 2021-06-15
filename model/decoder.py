@@ -281,7 +281,7 @@ class GenerationHead (Module):
         self.initialise_weights ()
 
     def forward(self, audio_out, video_out, text_out):
-        output = self.out_layer(torch.cat ([audio_out, video_out, text_out.unsqueeze (0)], dim=1))
+        output = self.out_layer(torch.cat ([audio_out, video_out, text_out], dim=1))
         return output
     
     def initialise_weights (self):
