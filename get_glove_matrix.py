@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 from config import Config
+from tqdm import tqdm
 
 def main (config):
     words = []
@@ -10,7 +11,7 @@ def main (config):
     glove_matrix = np.zeros((400000, config.glove_emb_dim))
 
     with open(config.glove_file, 'rb') as f:
-        for l in f:
+        for l in tqdm (f):
             line = l.decode().split()
             word = line[0]
             words.append(word)
