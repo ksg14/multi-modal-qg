@@ -193,8 +193,8 @@ class AudioDecoder (Module):
         # output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
 
-        output = self.out_layer(output[0])
-        return output, hidden, audio_attn_weights
+        # output = self.out_layer(output[0])
+        return output [0], hidden, audio_attn_weights
 
     def init_state(self, batch_sz):
         return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
@@ -251,8 +251,8 @@ class VideoDecoder (Module):
         # output = F.relu(output)
         output, hidden = self.lstm (output, hidden)
 
-        output = self.out_layer(output[0])
-        return output, hidden, vid_attn_weights
+        # output = self.out_layer(output[0])
+        return output [0], hidden, vid_attn_weights
     
     def init_state(self, batch_sz):
         return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
