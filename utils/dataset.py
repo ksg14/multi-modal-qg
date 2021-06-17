@@ -52,7 +52,7 @@ class VQGDataset (Dataset):
 
         # Text for ProphetNet
         if self.prophetnet_transform:
-            question = self.prophetnet_transform (f'[CLS] {question_str}', return_tensors='pt')
+            question = self.prophetnet_transform (f'{self.prophetnet_transform.cls_token} {question_str}', return_tensors='pt')
 
             # print (f'q ids - {question.input_ids}')
             # print (f'start - {self.prophetnet_transform.decode (question.input_ids [0][0])}')

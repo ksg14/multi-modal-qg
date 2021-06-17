@@ -14,7 +14,7 @@ import pickle
 import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder, ProphetNetTextEncoder
-from model.decoder import AttnDecoder, Decoder, ProphetNetDecoder, ProphetNetCGDecoder
+from model.decoder import AttnDecoder, Decoder, ProphetNetCG, AudioDecoder, VideoDecoder, GenerationHead
 
 from transformers import ProphetNetTokenizer
 
@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def evaluate (args, config, tokenizer, av_enc_model, dec_model, dataloader, device):
+def evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_dec, gen_head, dataloader, device):
 	# val_bleu = 0.0
 	# val_bleu_1 = 0.0
 	# val_bleu_2 = 0.0
@@ -34,6 +34,12 @@ def evaluate (args, config, tokenizer, av_enc_model, dec_model, dataloader, devi
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 	predictions = []
+
+	av_enc_model.eval () 
+	text_dec.eval ()
+	audio_dec.eval ()
+	video_dec.eval ()
+	gen_head.eval ()
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
@@ -49,10 +55,15 @@ def evaluate (args, config, tokenizer, av_enc_model, dec_model, dataloader, devi
 					print (f'question tgt - {question_tgt.shape}')
 
 				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
-				
+
+				audio_frames = audio_emb.shape [0]
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-audio_frames))
+				video_frames = video_emb.shape [0]
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
+
 				if args.logs:
-					print (f'audio emb - {audio_emb.shape}')
-					print (f'video emb - {video_emb.shape}')
+					print (f'audio emb - {padded_audio_emb.shape}')
+					print (f'video emb - {padded_video_emb.shape}')
 					# print (f'enc hidden - {enc_hidden_state.shape}')
 
 				# enc_out = torch.cat ([enc_hidden_state, audio_emb.unsqueeze (0), video_emb.unsqueeze (0)], dim=1)
@@ -60,15 +71,49 @@ def evaluate (args, config, tokenizer, av_enc_model, dec_model, dataloader, devi
 				# if args.logs:
 					# print (f'enc out - {enc_out.shape}')
 
-				pred_question_ids = dec_model.generate (context=context, audio_emb=audio_emb, video_emb=video_emb, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
-				pred_question_str = tokenizer.decode(pred_question_ids [0], skip_special_tokens=True)
+				text_out = text_dec.generate (context=context, strategy=args.strategy, beams=args.beams, max_len=args.max_len)
+				
+				text_out_len = len (text_out.scores)
+
+				if args.logs:
+					print (f'text scores - {len (text_out.scores)}')
+				
+				audio_dec_hidden = audio_dec.init_state (1)
+				video_dec_hidden = video_dec.init_state (1)
+
+				dec_input = torch.tensor([[tokenizer.encode (tokenizer.cls_token, add_special_tokens=False)]]).to (device)
+
+				pred_ids = []
+				for dec_i in range (text_out_len):
+					audio_dec_output, audio_dec_hidden, audio_attn= audio_dec (dec_input, audio_frames, padded_audio_emb, audio_dec_hidden)
+
+					video_dec_output, video_dec_hidden, video_attn= video_dec (dec_input, video_frames, padded_video_emb, video_dec_hidden)
+
+					if args.logs:
+						print(f'audio out - {audio_dec_output.shape}')
+						print(f'video out - {video_dec_output.shape}')
+						print(f'text out - {text_out.scores [dec_i].shape}')
+					
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_out.scores [dec_i])
+
+					next_word = torch.argmax (F.log_softmax (gen_out), dim=1)
+
+					if args.logs:
+						print (f'next word - {next_word}')
+
+					dec_input = next_word.unsqueeze (0).detach ()
+
+					pred_ids.append (next_word.item ())
+
+				if args.logs:
+					print (f'pred ids {pred_ids}')
+				pred_question_str = tokenizer.decode(pred_ids, skip_special_tokens=True)
 
 				predictions.append ({
 					'question_id' : question_id [0].item (),
 					'gt_question' : question_str [0], 
 					'pred_question' : pred_question_str
 				})
-
 
 				# question_str_list = question [0].split ()
 				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
@@ -119,54 +164,46 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	try:
-		config = Config (args.config_path)
-	except Exception as e:
-		print (f' Config load error {str (e)}')
-		config = None
+	# try:
+	# 	config = Config (args.config_path)
+	# except Exception as e:
+	# 	print (f' Config load error {str (e)}')
+	# 	config = None
+
+	config= Config ()
 
 	if config:
 		device = torch.device(args.device)
 		print(f'Device - {device}')
 
-		tokenizer = ProphetNetTokenizer.from_pretrained (config.pretrained_tokenizer_path)
+		tokenizer = ProphetNetTokenizer.from_pretrained('microsoft/prophetnet-large-uncased-squad-qg')
+
 		video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 		
 		test_dataset = VQGDataset (config.test_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
 		test_dataloader = DataLoader (test_dataset, batch_size=args.batch_sz, shuffle=False)
 
-		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, config.prophetnet_hidden_sz, device)
-		
-		if args.last:
-			av_enc_model.load_state_dict(torch.load(config.output_path / 'last_av_model.pth', map_location=device))
-		else:
-			av_enc_model.load_state_dict(torch.load(config.av_model_path, map_location=device))
-		
-		av_enc_model.eval ()
+		av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, device)
 
-		# enc_path = config.text_enc_model_path
-		# if args.last:
-		# 	enc_path = config.last_text_enc_model_path
-		# if args.pretrained:
-		# 	enc_path = config.pretrained_cg_enc_path
+		text_dec = ProphetNetCG (config.pretrained_cg_dec_path)
 
-		# text_enc_model = ProphetNetTextEncoder (enc_path)
-		# text_enc_model.eval()
+		# print (f'bos - {text_dec.model.config.bos_token_id}')
 
-		dec_path = config.dec_model_path
-		if args.last:
-			dec_path = config.last_dec_model_path
-		if args.pretrained:
-			dec_path = config.pretrained_cg_dec_path
+		emb_layer = text_dec.model.get_input_embeddings ()
 
-		dec_model = ProphetNetCGDecoder (dec_path)
-		dec_model.eval ()
+		audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+
+		video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+
+		gen_head = GenerationHead (enc_emb_dim=config.prophetnet_vocab*3, n_vocab=config.prophetnet_vocab, device=device)
 
 		av_enc_model.to (device)
-		# text_enc_model.to (device)
-		dec_model.to (device)
+		text_dec.to (device)
+		audio_dec.to (device)
+		video_dec.to (device)
+		gen_head.to (device)
 
-		predictions = evaluate (args, config, tokenizer, av_enc_model, dec_model, test_dataloader, device)
+		predictions = evaluate (args, config, tokenizer, av_enc_model, text_dec, audio_dec, video_dec, gen_head, test_dataloader, device)
 
 		if args.last:
 			out_file_path = config.output_path / f'last_predictions_{args.strategy}.json'
