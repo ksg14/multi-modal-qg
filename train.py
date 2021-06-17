@@ -281,7 +281,7 @@ if __name__ == '__main__':
 
 	audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
-	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.flatten_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
 	gen_head = GenerationHead (enc_emb_dim=config.prophetnet_hidden_sz+config.audio_dec_hidden+config.video_dec_hidden, n_vocab=config.prophetnet_vocab, device=device)
 

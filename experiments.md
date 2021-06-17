@@ -37,7 +37,16 @@
 * Attention on video frames
 * Attention on context words
 
-
 ### exp-vqg_multi-1 :
 
 * Prophetnet in eval mode
+* 2 layer audio and video decoders
+* Hidden sz - 512
+* Generation head takes logits
+
+### exp-vqg_multi-2 :
+
+* Prophetnet in train mode
+* 1 layer audio and video decoders
+* Hidden sz - 256
+* Generation head takes last hidden state

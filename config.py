@@ -22,7 +22,7 @@ class Config():
             os.makedirs(self.data_path)
 
     # results
-    output_path = Path (r'results/exp-vqg_multi-1/')
+    output_path = Path (r'results/exp-vqg_multi-2/')
     av_model_path = output_path / 'av_model.pth'
     text_model_path = output_path / 'text_model'
     audio_model_path = output_path / 'audio_model.pth'
@@ -96,7 +96,7 @@ class Config():
     av_in_channels = 3
     av_kernel_sz = 3
     av_stride = 1
-    video_hidden_dim = 512
+    # video_hidden_dim = 512
     flatten_dim = 1000
     video_dec_hidden = 256
     video_dec_layers = 1
