@@ -140,7 +140,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 	for epoch in range (args.epochs):
 		epoch_stats ['train']['loss'].append (0.0)
 		av_enc_model.train ()
-		text_dec.eval ()
+		text_dec.train ()
 		audio_dec.train ()
 		video_dec.train ()
 		gen_head.train ()
@@ -152,7 +152,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				tepoch.set_description (f'Epoch {epoch}')
 
 				av_enc_optimizer.zero_grad()
-				# text_dec_optimizer.zero_grad ()
+				text_dec_optimizer.zero_grad ()
 				audio_dec_optimizer.zero_grad()
 				video_dec_optimizer.zero_grad()
 				gen_head_optimizer.zero_grad()
@@ -175,7 +175,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 					print (f'audio emb - {audio_emb.shape}')
 					print (f'video emb - {video_emb.shape}')
 
-				text_out = text_dec (context, question_src, question_tgt)				
+				text_out, text_hidden = text_dec (context, question_src, question_tgt)				
 
 				audio_dec_hidden = audio_dec.init_state (1)
 				video_dec_hidden = video_dec.init_state (1)
@@ -188,9 +188,9 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 					if args.logs:
 						print(f'audio out - {audio_dec_output.shape}')
 						print(f'video out - {video_dec_output.shape}')
-						print(f'text out - {text_out [0][dec_i].shape}')
+						print(f'text out - {text_hidden [0][dec_i].shape}')
 					
-					gen_out = gen_head (audio_dec_output, video_dec_output, text_out [0][dec_i].unsqueeze (0))
+					gen_out = gen_head (audio_dec_output, video_dec_output, text_hidden [0][dec_i].unsqueeze (0))
 					
 					loss += criterion (gen_out, question_tgt [0][0][dec_i].view (-1))
 
@@ -200,7 +200,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 				loss.backward()
 
 				av_enc_optimizer.step()
-				# text_dec_optimizer.step()
+				text_dec_optimizer.step()
 				audio_dec_optimizer.step()
 				video_dec_optimizer.step()
 				gen_head_optimizer.step()
@@ -229,7 +229,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 			save_model (audio_dec, config.audio_model_path)
 			save_model (video_dec, config.video_model_path)
 			save_model (gen_head, config.gen_head_model_path)
-			# text_dec.save_model (config.text_model_path)
+			text_dec.save_model (config.text_model_path)
 		
 		# Save last epoch model
 		if epoch == args.epochs-1:
@@ -238,7 +238,7 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 			save_model (audio_dec, config.output_path / 'last_audio.pth')
 			save_model (video_dec, config.output_path / 'last_video.pth')
 			save_model (gen_head, config.output_path / 'last_gen_head.pth')
-			# text_dec.save_model (config.last_text_model_path)
+			text_dec.save_model (config.last_text_model_path)
 
 	return epoch_stats, best_epoch
 
@@ -283,7 +283,7 @@ if __name__ == '__main__':
 
 	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_hidden_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
-	gen_head = GenerationHead (enc_emb_dim=config.prophetnet_vocab+config.audio_dec_hidden+config.video_dec_hidden, n_vocab=config.prophetnet_vocab, device=device)
+	gen_head = GenerationHead (enc_emb_dim=config.prophetnet_hidden_sz+config.audio_dec_hidden+config.video_dec_hidden, n_vocab=config.prophetnet_vocab, device=device)
 
 	av_enc_model.to (device)
 	text_dec.to (device)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
 	criterion = CrossEntropyLoss()
 
 	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
-	# text_dec_optimizer = Adam(text_dec.parameters(), lr=args.lr)
+	text_dec_optimizer = Adam(text_dec.parameters(), lr=args.lr)
 	audio_dec_optimizer = Adam(audio_dec.parameters(), lr=args.lr)
 	video_dec_optimizer = Adam(video_dec.parameters(), lr=args.lr)
 	gen_head_optimizer = Adam(gen_head.parameters(), lr=args.lr)
@@ -303,7 +303,7 @@ if __name__ == '__main__':
 									text_dec=text_dec, audio_dec=audio_dec, video_dec=video_dec, \
 									gen_head=gen_head, train_dataloader=train_dataloader, \
 									val_dataloader=val_dataloader, av_enc_optimizer=av_enc_optimizer, \
-									text_dec_optimizer=None, audio_dec_optimizer=audio_dec_optimizer, \
+									text_dec_optimizer=text_dec_optimizer, audio_dec_optimizer=audio_dec_optimizer, \
 									gen_head_optimizer=gen_head_optimizer, video_dec_optimizer=video_dec_optimizer, \
 									criterion=criterion, device=device)
 
