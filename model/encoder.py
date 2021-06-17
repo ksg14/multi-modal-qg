@@ -37,7 +37,7 @@ class VideoConvLstmEncoder (Module):
         self.kernel_sz = kernel_sz
         self.stride = stride
         self.hidden_dim = hidden_dim
-        self.video_emb_dim = video_flatten_dim
+        self.video_flatten_dim = video_flatten_dim
 
         self.conv1 = Conv2d (self.in_channels, 4, self.kernel_sz, self.stride)
         self.bn1 = BatchNorm2d (4)
