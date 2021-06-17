@@ -86,8 +86,8 @@ class Config():
     # Audio
     audio_emb = 128
     av_emb = 128 + 400
-    audio_dec_hidden = 512
-    audio_dec_layers = 2
+    audio_dec_hidden = 256
+    audio_dec_layers = 1
     audio_dec_dropout = 0.2
     
     # Video
@@ -98,8 +98,8 @@ class Config():
     av_stride = 1
     video_hidden_dim = 512
     flatten_dim = 1000
-    video_dec_hidden = 512
-    video_dec_layers = 2
+    video_dec_hidden = 256
+    video_dec_layers = 1
     video_dec_dropout = 0.2
     
     # prophetnet
