@@ -36,3 +36,8 @@
 * 3 layer lstm with dropout
 * Attention on video frames
 * Attention on context words
+
+
+### exp-vqg_multi-1 :
+
+* Prophetnet in eval mode

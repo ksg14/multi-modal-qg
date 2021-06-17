@@ -111,7 +111,7 @@ def validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_he
 				if args.logs:
 					print (f'loss - {loss.item () / n_len}')
 				
-				val_loss += loss.item () / question_src.shape [2]
+				val_loss += (loss.item () / question_src.shape [2])
 
 				# question_str_list = question [0].split ()
 				# val_bleu_1 += sentence_bleu (question_str_list, pred_words, weights=(1, 0, 0, 0))
