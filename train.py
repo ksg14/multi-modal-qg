@@ -271,7 +271,7 @@ if __name__ == '__main__':
 	train_dataloader = DataLoader (train_dataset, batch_size=args.batch_sz, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=args.batch_sz, shuffle=True)	
 
-	av_enc_model = AudioVideoEncoder (config.av_in_channels, config.av_kernel_sz, config.av_stride, config.video_hidden_dim, config.flatten_dim, config.audio_emb, device)
+	av_enc_model = AudioVideoEncoder (av_in_channels=config.av_in_channels, av_kernel_sz=config.av_kernel_sz, av_stride=config.av_stride, video_hidden_dim=config.video_enc_hidden, video_flatten_dim=config.flatten_dim, audio_dim=config.audio_emb, device=device)
 
 	text_dec = ProphetNetCG (config.pretrained_cg_dec_path)
 
@@ -281,7 +281,7 @@ if __name__ == '__main__':
 
 	audio_dec = AudioDecoder (num_layers=config.audio_dec_layers, dropout_p=config.audio_dec_dropout, hidden_dim=config.audio_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, audio_emb_dim=config.audio_emb, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
-	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.flatten_dim, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
+	video_dec = VideoDecoder (num_layers=config.video_dec_layers, dropout_p=config.video_dec_dropout, hidden_dim=config.video_dec_hidden, n_vocab=config.prophetnet_vocab, word_emb_dim=config.prophetnet_hidden_sz, video_emb_dim=config.video_dec_hidden, emb_layer=emb_layer, av_max_length=config.av_max_length, device=device)
 
 	gen_head = GenerationHead (enc_emb_dim=config.prophetnet_hidden_sz+config.audio_dec_hidden+config.video_dec_hidden, n_vocab=config.prophetnet_vocab, device=device)
 

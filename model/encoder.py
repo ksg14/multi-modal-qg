@@ -31,13 +31,13 @@ class VideoResnetEncoder (Module):
         return embeddings
 
 class VideoConvLstmEncoder (Module):
-    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_emb_dim):
+    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_flatten_dim):
         super().__init__()
         self.in_channels = in_channels
         self.kernel_sz = kernel_sz
         self.stride = stride
         self.hidden_dim = hidden_dim
-        self.video_emb_dim = video_emb_dim
+        self.video_emb_dim = video_flatten_dim
 
         self.conv1 = Conv2d (self.in_channels, 4, self.kernel_sz, self.stride)
         self.bn1 = BatchNorm2d (4)
@@ -53,7 +53,7 @@ class VideoConvLstmEncoder (Module):
 
         self.flatten = Flatten ()
 
-        self.lstm = LSTM(self.video_emb_dim, self.hidden_dim)
+        self.lstm = LSTM(self.video_flatten_dim, self.hidden_dim)
         # self.out_layer = Linear (self.hidden_dim, self.out_dim)
 
         self.initialise_weights ()
@@ -114,12 +114,12 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_emb_dim, audio_dim, device):
+    def __init__(self, av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim, audio_dim, device):
         super().__init__()
 
         self.audio_enc = AudioEncoder (audio_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_emb_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
 
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file)
