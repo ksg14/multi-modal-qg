@@ -2,8 +2,8 @@
 	{
 		"video_id": 0,
 		"question": "What is stress testing?",
-		"answer_start": "3:09",
-		"answer_end": "4:50",
+		"answer_start": "3:10",
+		"answer_end": "3:45",
 		"type": "MCQ",
 		"bloom": "rem",
 		"mooc": "intro",
@@ -1203,8 +1203,8 @@
 	{
 		"video_id": 67,
 		"question": "What are some essential characteristics of Platform as a Service?",
-		"answer_start": "1:27",
-		"answer_end": "2:50",
+		"answer_start": "1:30",
+		"answer_end": "2:40",
 		"type": "short",
 		"bloom": "rem",
 		"mooc": "intro",

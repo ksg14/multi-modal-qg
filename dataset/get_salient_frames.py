@@ -63,7 +63,7 @@ if __name__ == '__main__':
     with open (questions_json, 'r') as file_io:
         questions = json.load (file_io)
     
-    for question in tqdm (questions):
+    for question in tqdm (questions [0:1]):
         if len (question ['question']) == 0:
             break
 
