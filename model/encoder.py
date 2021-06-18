@@ -168,8 +168,8 @@ class AudioVideoEncoder (Module):
 
         self.audio_enc = AudioEncoder (audio_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        # self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
-        self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
+        # self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
 
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file)
