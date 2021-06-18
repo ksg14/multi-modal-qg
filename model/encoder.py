@@ -96,6 +96,12 @@ class VideoConvLstmEncoder (Module):
         self.bn4 = BatchNorm2d (10)
         self.maxpool2 = MaxPool2d (self.kernel_sz, self.kernel_sz)
 
+        self.conv5 = Conv2d (10, 12, self.kernel_sz, self.stride)
+        self.bn5 = BatchNorm2d (12)
+        self.conv6 = Conv2d (12, 14, self.kernel_sz, self.stride)
+        self.bn6 = BatchNorm2d (14)
+        self.maxpool3 = MaxPool2d (self.kernel_sz, self.kernel_sz)
+
         self.flatten = Flatten ()
 
         self.lstm = LSTM(self.video_flatten_dim, self.hidden_dim)
