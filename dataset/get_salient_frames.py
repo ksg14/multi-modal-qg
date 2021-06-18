@@ -63,7 +63,7 @@ if __name__ == '__main__':
     with open (questions_json, 'r') as file_io:
         questions = json.load (file_io)
     
-    id_to_use = set ([0, 67])
+    id_to_use = set ([0, 85])
 
     for question in tqdm (questions):
         if len (question ['question']) == 0:
