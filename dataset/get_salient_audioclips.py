@@ -11,7 +11,7 @@ def clip_audio (save_path, video_id, question_id, answer_start, answer_end, audi
             answer_end = '0' + answer_end
 
         command = f"ffmpeg -hide_banner -loglevel panic -i {audio_path}/{video_id}.wav -ss 00:{answer_start} -to 00:{answer_end} -c copy {save_path}/v_{video_id}_q_{question_id}_.wav"
-        subprocess.call(command, shell=False)
+        subprocess.call(command, shell=True)
     except: 
         return 1
     return 0
