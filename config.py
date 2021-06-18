@@ -98,7 +98,7 @@ class Config():
     av_pool_kernel_sz = 2
     av_stride = 1
     # video_hidden_dim = 512
-    flatten_dim = 1000
+    flatten_dim = 1800
     # flatten_dim = 256
     video_enc_hidden = 256
     video_dec_hidden = 256
