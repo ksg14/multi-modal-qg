@@ -61,12 +61,12 @@ class AttnDecoder (Module):
         self.emb_layer = emb_layer
         self.device = device
 
-        # self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
+        self.text_attn = Linear (self.word_emb_dim + self.hidden_dim, self.text_max_length)
         # self.vid_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         self.audio_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
-        self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.word_emb_dim + self.audio_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
+        # self.dropout = Dropout (self.dropout_p)
+        self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()
@@ -75,10 +75,10 @@ class AttnDecoder (Module):
         embedded = self.emb_layer (word).view(1, 1, -1)
 
         # Text attention
-        # text_attn_pre_soft = self.text_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
-        # text_attn_pre_soft [enc_seq_len:] = float ('-inf')
-        # text_attn_weights = F.softmax(text_attn_pre_soft, dim=1)
-        # text_attn_applied = torch.bmm(text_attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
+        text_attn_pre_soft = self.text_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
+        text_attn_pre_soft [enc_seq_len:] = float ('-inf')
+        text_attn_weights = F.softmax(text_attn_pre_soft, dim=1)
+        text_attn_applied = torch.bmm(text_attn_weights.unsqueeze(0), encoder_outputs.unsqueeze(0))
 
         # Video attention
         # vid_attn_pre_soft = self.vid_attn(torch.cat((embedded[0], hidden[0] [-1]), 1))
@@ -92,7 +92,7 @@ class AttnDecoder (Module):
         audio_attn_weights = F.softmax(audio_attn_pre_soft, dim=1)
         audio_attn_applied = torch.bmm(audio_attn_weights.unsqueeze(0), audio_emb.unsqueeze(0))
 
-        output = torch.cat((embedded[0], audio_attn_applied [0]), 1)
+        output = torch.cat((embedded [0], text_attn_applied [0], audio_attn_applied [0]), 1)
         # output = self.attn_combine(output).unsqueeze(0)
         output = output.unsqueeze (0)
 
@@ -101,7 +101,7 @@ class AttnDecoder (Module):
 
         output = self.out_layer(output[0])
         # return output, hidden, text_attn_weights, audio_attn_weights, vid_attn_weights
-        return output, hidden, None, audio_attn_weights, None
+        return output, hidden, text_attn_weights, audio_attn_weights, None
     
     def init_state(self, batch_sz):
         return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
