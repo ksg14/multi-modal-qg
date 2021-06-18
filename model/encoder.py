@@ -117,10 +117,11 @@ class VideoConvLstmEncoder (Module):
 
         first_block = self.maxpool1 (self.bn2 (F.relu (self.conv2 (self.bn1 (F.relu (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))))
         second_block = self.maxpool2 (self.bn4 (F.relu (self.conv4 (self.bn3 (F.relu (self.conv3 (first_block)))))))
+        third_block = self.maxpool3 (self.bn6 (F.relu (self.conv6 (self.bn5 (F.relu (self.conv5 (second_block)))))))
 
-        print (f'second block - {second_block.shape}')
+        print (f'third_block - {third_block.shape}')
 
-        cnn_out = self.flatten (second_block)
+        cnn_out = self.flatten (third_block)
 
         print (f'cnn_out - {cnn_out.shape}')
 
