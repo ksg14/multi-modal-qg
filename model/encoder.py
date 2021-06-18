@@ -58,7 +58,7 @@ class VideoResnetConvLstmEncoder (Module):
 
         cnn_out = self.model (video_frames.view (batch_sz, channels, height, width))
 
-        print (f'resnet_out - {cnn_out.shape}')
+        print (f'cnn_out - {cnn_out.shape}')
 
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
@@ -112,6 +112,8 @@ class VideoConvLstmEncoder (Module):
 
         cnn_out = self.flatten (second_block)
 
+        print (f'cnn_out - {cnn_out.shape}')
+
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
         return lstm_out
@@ -162,8 +164,8 @@ class AudioVideoEncoder (Module):
 
         self.audio_enc = AudioEncoder (audio_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        # self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
-        self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
+        # self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
 
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file)
