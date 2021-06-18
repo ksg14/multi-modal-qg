@@ -80,8 +80,8 @@ class Config():
     # hyper-params
     optim='adam' # sgd, adam
     question_max_length = 21
-    context_max_lenth = 283
-    av_max_length = 101
+    context_max_lenth = 171
+    av_max_length = 70
     
     # Audio
     audio_emb = 128
