@@ -86,7 +86,7 @@ class Config():
     # Audio
     audio_emb = 128
     av_emb = 128 + 400
-    audio_dec_hidden = 256
+    audio_dec_hidden = 128
     audio_dec_layers = 1
     audio_dec_dropout = 0.2
     
@@ -98,9 +98,9 @@ class Config():
     av_stride = 1
     # video_hidden_dim = 512
     # flatten_dim = 1000
-    flatten_dim = 512
-    video_enc_hidden = 256
-    video_dec_hidden = 256
+    flatten_dim = 256
+    video_enc_hidden = 128
+    video_dec_hidden = 128
     video_dec_layers = 1
     video_dec_dropout = 0.2
     

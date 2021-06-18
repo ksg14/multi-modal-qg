@@ -36,9 +36,13 @@ class VideoResnetConvLstmEncoder (Module):
         self.hidden_dim = hidden_dim
         self.video_flatten_dim = video_flatten_dim
 
-        self.model = models.resnet18(pretrained=False)
-        num_feat = self.model.fc.in_features
-        self.model.fc = Linear(num_feat, video_flatten_dim)
+        # self.model = models.resnet18(pretrained=False)
+        # num_feat = self.model.fc.in_features
+        # self.model.fc = Linear(num_feat, video_flatten_dim)
+
+        self.model = models.vgg11_bn(pretrained=False)
+        num_ftrs = self.model.classifier[6].in_features
+        self.model.classifier[6] = Linear(num_ftrs, video_flatten_dim)
 
         self.lstm = LSTM(self.video_flatten_dim, self.hidden_dim)
         # self.out_layer = Linear (self.hidden_dim, self.out_dim)
