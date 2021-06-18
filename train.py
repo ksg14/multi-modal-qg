@@ -272,7 +272,7 @@ if __name__ == '__main__':
 	train_dataloader = DataLoader (train_dataset, batch_size=args.batch_sz, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=args.batch_sz, shuffle=True)	
 
-	av_enc_model = AudioVideoEncoder (av_in_channels=config.av_in_channels, av_kernel_sz=config.av_kernel_sz, av_stride=config.av_stride, video_hidden_dim=config.video_enc_hidden, video_flatten_dim=config.flatten_dim, audio_dim=config.audio_emb, device=device)
+	av_enc_model = AudioVideoEncoder (av_in_channels=config.av_in_channels, av_pool_kernel_sz=config.av_pool_kernel_sz, av_kernel_sz=config.av_kernel_sz, av_stride=config.av_stride, video_hidden_dim=config.video_enc_hidden, video_flatten_dim=config.flatten_dim, audio_dim=config.audio_emb, device=device)
 
 	text_dec = ProphetNetCG (config.pretrained_cg_dec_path)
 

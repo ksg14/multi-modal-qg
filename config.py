@@ -95,6 +95,7 @@ class Config():
     vid_std = [0.22803, 0.22145, 0.216989]
     av_in_channels = 3
     av_kernel_sz = 3
+    av_pool_kernel_sz = 2
     av_stride = 1
     # video_hidden_dim = 512
     flatten_dim = 1000

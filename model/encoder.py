@@ -76,10 +76,11 @@ class VideoResnetConvLstmEncoder (Module):
                 normal_(param.data)
 
 class VideoConvLstmEncoder (Module):
-    def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_flatten_dim):
+    def __init__ (self, in_channels, pool_kernel_sz, kernel_sz, stride, hidden_dim, video_flatten_dim):
         super().__init__()
         self.in_channels = in_channels
         self.kernel_sz = kernel_sz
+        self.pool_kernel_sz = pool_kernel_sz
         self.stride = stride
         self.hidden_dim = hidden_dim
         self.video_flatten_dim = video_flatten_dim
@@ -88,19 +89,25 @@ class VideoConvLstmEncoder (Module):
         self.bn1 = BatchNorm2d (4)
         self.conv2 = Conv2d (4, 6, self.kernel_sz, self.stride)
         self.bn2 = BatchNorm2d (6)
-        self.maxpool1 = MaxPool2d (self.kernel_sz, self.kernel_sz)
+        self.maxpool1 = MaxPool2d (self.pool_kernel_sz, self.pool_kernel_sz)
 
         self.conv3 = Conv2d (6, 8, self.kernel_sz, self.stride)
         self.bn3 = BatchNorm2d (8)
         self.conv4 = Conv2d (8, 10, self.kernel_sz, self.stride)
         self.bn4 = BatchNorm2d (10)
-        self.maxpool2 = MaxPool2d (self.kernel_sz, self.kernel_sz)
+        self.maxpool2 = MaxPool2d (self.pool_kernel_sz, self.pool_kernel_sz)
 
         self.conv5 = Conv2d (10, 12, self.kernel_sz, self.stride)
         self.bn5 = BatchNorm2d (12)
         self.conv6 = Conv2d (12, 14, self.kernel_sz, self.stride)
         self.bn6 = BatchNorm2d (14)
-        self.maxpool3 = MaxPool2d (self.kernel_sz, self.kernel_sz)
+        self.maxpool3 = MaxPool2d (self.pool_kernel_sz, self.pool_kernel_sz)
+
+        self.conv7 = Conv2d (10, 12, self.kernel_sz, self.stride)
+        self.bn7 = BatchNorm2d (12)
+        self.conv8 = Conv2d (12, 14, self.kernel_sz, self.stride)
+        self.bn8 = BatchNorm2d (14)
+        self.maxpool4 = MaxPool2d (self.pool_kernel_sz, self.pool_kernel_sz)
 
         self.flatten = Flatten ()
 
@@ -118,6 +125,7 @@ class VideoConvLstmEncoder (Module):
         first_block = self.maxpool1 (self.bn2 (F.relu (self.conv2 (self.bn1 (F.relu (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))))
         second_block = self.maxpool2 (self.bn4 (F.relu (self.conv4 (self.bn3 (F.relu (self.conv3 (first_block)))))))
         third_block = self.maxpool3 (self.bn6 (F.relu (self.conv6 (self.bn5 (F.relu (self.conv5 (second_block)))))))
+        third_block = self.maxpool4 (self.bn8 (F.relu (self.conv8 (self.bn7 (F.relu (self.conv7 (third_block)))))))
 
         print (f'third_block - {third_block.shape}')
 
@@ -170,12 +178,12 @@ class TextEncoder (Module):
                 torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
-    def __init__(self, av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim, audio_dim, device):
+    def __init__(self, av_in_channels, av_pool_kernel_sz, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim, audio_dim, device):
         super().__init__()
 
         self.audio_enc = AudioEncoder (audio_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
+        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_pool_kernel_sz, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
         # self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
 
     def forward (self, audio_file, video_frames):
