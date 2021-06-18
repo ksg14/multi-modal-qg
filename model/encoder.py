@@ -30,6 +30,47 @@ class VideoResnetEncoder (Module):
 
         return embeddings
 
+class VideoResnetConvLstmEncoder (Module):
+    def __init__ (self, hidden_dim, video_flatten_dim):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        self.video_flatten_dim = video_flatten_dim
+
+        self.model = models.resnet18(pretrained=False)
+        num_feat = self.model.fc.in_features
+        self.model.fc = Linear(num_feat, video_flatten_dim)
+
+        self.lstm = LSTM(self.video_flatten_dim, self.hidden_dim)
+        # self.out_layer = Linear (self.hidden_dim, self.out_dim)
+
+        self.initialise_weights ()
+
+    def forward (self, video_frames):
+        batch_sz = video_frames.shape [2]
+        channels = video_frames.shape [1]
+        height = video_frames.shape [3]
+        width = video_frames.shape [4]
+
+        # first_block = self.maxpool1 (self.bn2 (F.relu (self.conv2 (self.bn1 (F.relu (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))))
+        # second_block = self.maxpool2 (self.bn4 (F.relu (self.conv4 (self.bn3 (F.relu (self.conv3 (first_block)))))))
+
+        # cnn_out = self.flatten (second_block)
+
+        cnn_out = self.model (video_frames.view (batch_sz, channels, height, width))
+
+        print (f'resnet_out - {cnn_out.shape}')
+
+        lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
+
+        return lstm_out
+    
+    def initialise_weights (self):
+        for param in self.lstm.parameters():
+            if len(param.shape) >= 2:
+                orthogonal_(param.data)
+            else:
+                normal_(param.data)
+
 class VideoConvLstmEncoder (Module):
     def __init__ (self, in_channels, kernel_sz, stride, hidden_dim, video_flatten_dim):
         super().__init__()
@@ -66,6 +107,8 @@ class VideoConvLstmEncoder (Module):
 
         first_block = self.maxpool1 (self.bn2 (F.relu (self.conv2 (self.bn1 (F.relu (self.conv1 (video_frames.view (batch_sz, channels, height, width))))))))
         second_block = self.maxpool2 (self.bn4 (F.relu (self.conv4 (self.bn3 (F.relu (self.conv3 (first_block)))))))
+
+        print (f'second block - {second_block.shape}')
 
         cnn_out = self.flatten (second_block)
 
@@ -119,7 +162,8 @@ class AudioVideoEncoder (Module):
 
         self.audio_enc = AudioEncoder (audio_dim, device)
         # self.video_enc = VideoEncoder (download_pretrained)
-        self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
+        # self.video_enc = VideoConvLstmEncoder (av_in_channels, av_kernel_sz, av_stride, video_hidden_dim, video_flatten_dim)
+        self.video_enc = VideoResnetConvLstmEncoder (video_hidden_dim, video_flatten_dim)
 
     def forward (self, audio_file, video_frames):
         audio_emb = self.audio_enc (audio_file)

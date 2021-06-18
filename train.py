@@ -209,8 +209,8 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 					epoch_stats ['train']['loss'] [-1] += ((loss.item () / question_src.shape [2]) / n_len)
 				
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
-				# break
-		# break
+				break
+		break
 		val_loss = validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head, criterion, val_dataloader, device)
 		epoch_stats ['val']['loss'].append (val_loss)
 		# epoch_stats ['val']['bleu'].append (val_bleu)
@@ -264,7 +264,8 @@ if __name__ == '__main__':
 	print(f'Device - {device}')
 	
 	tokenizer = ProphetNetTokenizer.from_pretrained (config.pretrained_tokenizer_path)
-	video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
+	# video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
+	video_transform = T.Compose ([ToFloatTensor ()])
 
 	train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)
 	val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= None, prophetnet_transform=tokenizer, video_transform=video_transform)

@@ -54,7 +54,7 @@ if __name__ == '__main__':
     save_path = 'salient_frames'
     video_path = 'vids'
     questions_json = 'labelled_questions.json'
-    frame_dim = (112, 112)
+    frame_dim = (224, 224)
 
     if not os.path.exists (save_path):
         print (f'{save_path} dir created')
