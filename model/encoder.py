@@ -58,7 +58,7 @@ class VideoResnetConvLstmEncoder (Module):
 
         cnn_out = self.model (video_frames.view (batch_sz, channels, height, width))
 
-        print (f'cnn_out - {cnn_out.shape}')
+        # print (f'cnn_out - {cnn_out.shape}')
 
         lstm_out, _ = self.lstm (cnn_out.view (cnn_out.shape [0], 1, -1))
 
@@ -172,7 +172,7 @@ class AudioVideoEncoder (Module):
         # print (f'audio emb - {audio_emb.shape}')
 
         video_emb = self.video_enc (video_frames).squeeze ()
-        print (f'in enc video emb shape - {video_emb.shape}')
+        # print (f'in enc video emb shape - {video_emb.shape}')
 
         # enc_output = torch.cat ((audio_emb, video_emb), dim=1)
 
