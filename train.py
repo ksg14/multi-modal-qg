@@ -209,8 +209,8 @@ def train (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head,
 					epoch_stats ['train']['loss'] [-1] += ((loss.item () / question_src.shape [2]) / n_len)
 				
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
-				break
-		break
+				# break
+		# break
 		val_loss = validate (args, config, av_enc_model, text_dec, audio_dec, video_dec, gen_head, criterion, val_dataloader, device)
 		epoch_stats ['val']['loss'].append (val_loss)
 		# epoch_stats ['val']['bleu'].append (val_bleu)
