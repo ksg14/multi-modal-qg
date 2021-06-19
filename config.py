@@ -67,22 +67,23 @@ class Config():
     vid_mean = [0.43216, 0.394666, 0.37645]
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
-    context_max_lenth = 283
-    av_max_length = 101
+    context_max_lenth = 171
+    av_max_length = 70
     # Video encoder
     av_in_channels = 3
     av_kernel_sz = 3
     av_stride = 1
     video_hidden_dim = 512
-    flatten_dim = 1000
+    video_emb_dim = 512
+    # flatten_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
-    text_lstm_layers = 3
+    text_lstm_layers = 2
     text_lstm_dropout = 0.2
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
-    dec_lstm_layers = 3
+    dec_lstm_layers = 2
     dec_lstm_dropout = 0.2
     
     # checkpoints
