@@ -11,6 +11,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 import pickle
+import argparse
 
 from model.encoder import AudioVideoEncoder, TextEncoder
 from model.decoder import AttnDecoder, Decoder
@@ -58,7 +59,7 @@ def repackage_hidden(h):
 	else:
 		return tuple(repackage_hidden(v) for v in h)
 
-def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, context_max_len, av_max_len, pred_max_len, device):
+def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader, criterion, device):
 	val_loss = 0.0
 	val_bleu = 0.0
 	val_bleu_1 = 0.0
@@ -82,11 +83,11 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
 
 				audio_frames = audio_emb.shape [0]
 				video_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, av_max_len-audio_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-video_frames))
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_len-audio_frames))
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_len-video_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
-				all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
+				all_enc_outputs = torch.zeros (config.context_max_len, text_enc_model.hidden_dim).to (device)
 
 				for ei in range (context_len):
 					enc_output, text_enc_hidden = text_enc_model(context_tensor [0][ei], text_enc_hidden)
@@ -129,13 +130,13 @@ def validate (av_enc_model, text_enc_model, dec_model, dataloader, criterion, co
 	print (f'Val_loss - {round (val_loss, 3)}, Val_bleu - {round (val_bleu, 3)}, Val_bleu_1 - {round (val_bleu_1, 3)}')
 	return val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 
 
-def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, n_epochs, context_max_len, av_max_len, pred_max_len, device):
+def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, device):
 	epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
 	n_len = len (train_dataloader)
 	best_epoch_score = float ('inf')
 	best_epoch = -1
 
-	for epoch in range (n_epochs):
+	for epoch in range (args.epochs):
 		epoch_stats ['train']['loss'].append (0.0)
 		av_enc_model.train ()
 		text_enc_model.train ()
@@ -155,11 +156,11 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 
 				audio_frames = audio_emb.shape [0]
 				video_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, av_max_len-audio_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, av_max_len-video_frames))
+				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_len-audio_frames))
+				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_len-video_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
-				all_enc_outputs = torch.zeros (context_max_len, text_enc_model.hidden_dim).to (device)
+				all_enc_outputs = torch.zeros (config.context_max_len, text_enc_model.hidden_dim).to (device)
 
 				loss = 0
 
@@ -188,7 +189,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 				tepoch.set_postfix (train_loss=epoch_stats ['train']['loss'] [-1])
 				# break
 		# break
-		val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, context_max_len, av_max_len, pred_max_len, device)
+		val_loss, val_bleu, val_bleu_1, val_bleu_2, val_bleu_3 = validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, device)
 		epoch_stats ['val']['loss'].append (val_loss)
 		epoch_stats ['val']['bleu'].append (val_bleu)
 		epoch_stats ['val']['bleu_1'].append (val_bleu_1)
@@ -208,7 +209,7 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 			save_weights (dec_model.emb_layer, config.learned_weight_path)
 		
 		# Save last epoch model
-		if epoch == n_epochs-1:
+		if epoch == args.epochs-1:
 			print ('Saving last epoch model !')
 			save_model (av_enc_model, config.output_path / 'last_av_model.pth')
 			save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
@@ -220,18 +221,34 @@ def train (av_enc_model, text_enc_model, dec_model, train_dataloader, val_datalo
 	return epoch_stats, best_epoch
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Training code')
+	parser.add_argument('-l',
+						'--logs',
+						action='store_true',
+						help='print logs')
+	parser.add_argument('--epochs', type=int, default=100)
+	# parser.add_argument('--batch_sz', type=int, default=1)
+	parser.add_argument('--lr', type=float, default=1e-4)
+	parser.add_argument('--device', type=str, default='cpu')
+
+	args = parser.parse_args()
+
 	config = Config ()
 
-	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	if torch.cuda.is_available():
+		print ('Cuda is available!')
+	
+	device = torch.device(args.device)
 	print(f'Device - {device}')
 
 	weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
 	weights_matrix = weights_matrix.long ().to (device)
 		
-	video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
+	# video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
+	video_transform = T.Compose ([ToFloatTensor ()])
 
-	train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
-	val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform= prepare_sequence, video_transform=video_transform)
+	train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform=prepare_sequence, video_transform=video_transform)
+	val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform=prepare_sequence, video_transform=video_transform)
 	train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=True)
 
@@ -269,7 +286,7 @@ if __name__ == '__main__':
 	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
 	dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
 
-	epoch_stats, best_epoch = train (av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
+	epoch_stats, best_epoch = train (args, config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
 									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
 									dec_optimizer=dec_optimizer, criterion=criterion, n_epochs=config.epochs, \
