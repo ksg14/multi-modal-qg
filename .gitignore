@@ -4,6 +4,7 @@ salient*
 dataset/subs*
 dataset/questions*
 dataset/vid*
+dataset/*.json
 data/
 glove.6B/
 subs/
