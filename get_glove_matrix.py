@@ -10,6 +10,8 @@ def main (config):
 
     glove_matrix = np.zeros((400000, config.glove_emb_dim))
 
+    print (f'Words - {400000}')
+
     with open(config.glove_file, 'rb') as f:
         for l in tqdm (f):
             line = l.decode().split()
