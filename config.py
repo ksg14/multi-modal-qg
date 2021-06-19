@@ -65,7 +65,7 @@ class Config():
     vid_mean = [0.43216, 0.394666, 0.37645]
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 21
-    context_max_lenth = 162
+    context_max_length = 162
     av_max_length = 47
     # Video encoder
     av_in_channels = 3
