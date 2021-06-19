@@ -282,9 +282,9 @@ if __name__ == '__main__':
 	dec_model.to (device)
 
 	criterion = CrossEntropyLoss()
-	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=config.lr)
-	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=config.lr)
-	dec_optimizer = Adam(dec_model.parameters(), lr=config.lr)
+	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
+	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=args.lr)
+	dec_optimizer = Adam(dec_model.parameters(), lr=args.lr)
 
 	epoch_stats, best_epoch = train (args, config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
