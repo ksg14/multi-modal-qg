@@ -273,7 +273,7 @@ if __name__ == '__main__':
 						video_emb_dim=config.video_hidden_dim, \
 						audio_emb_dim=config.audio_emb, \
 						emb_layer=emb_layer, \
-						text_max_length=config.context_max_lenth, \
+						text_max_length=config.context_max_length, \
 						av_max_length=config.av_max_length, \
 						device=device)
 
