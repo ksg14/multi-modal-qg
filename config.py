@@ -78,6 +78,7 @@ class Config():
     # flatten_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
+    text_emb_dim = text_lstm_hidden_dim * 2
     text_lstm_layers = 2
     text_lstm_dropout = 0.2
     text_non_trainable = False

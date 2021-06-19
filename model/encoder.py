@@ -134,7 +134,7 @@ class TextEncoder (Module):
         self.device = device
         self.dropout_p = dropout_p
 
-        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
+        self.lstm = LSTM(self.embedding_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p, bidirectional=True)
 
         self.initialise_weights ()
         
