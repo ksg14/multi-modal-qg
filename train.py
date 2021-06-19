@@ -133,7 +133,7 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataloader, val_dataloader, av_enc_optimizer, text_enc_optimizer, dec_optimizer, criterion, device):
 	epoch_stats = { 'train' : {'loss' : []}, 'val' : {'loss' : [], 'bleu' : [], 'bleu_1' : [], 'bleu_2' : [], 'bleu_3' : [], 'bleu_4' : []} }
 	n_len = len (train_dataloader)
-	best_epoch_score = float ('inf')
+	best_epoch_score = float ('-inf')
 	best_epoch = -1
 
 	for epoch in range (args.epochs):
