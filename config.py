@@ -38,11 +38,18 @@ class Config():
     videos_file = dataset_path / 'videos.json'
 
     # data
-    data_path = Path ('data')
+    data_path = Path (r'data')
     vocab_file = data_path / 'vocab.json'
     index_to_word_file = data_path / 'index_to_word.json'
     weights_matrix_file = data_path / 'weight_matrix.npy'
     preprocessed_text_file = data_path / 'preprocesses_text.json'
+
+    # Squad
+    squad_path = Path (r'squad')
+    squad_train_file = squad_path / 'train-v2.0.json'
+    squad_val_file = squad_path / 'dev-v2.0.json'
+    squad_prep_train_file = squad_path / 'prep_train.json'
+    squad_prep_val_file = squad_path / 'prep_val.json'
 
     # train/val/test
     train_file = data_path / 'train_questions.json'
@@ -78,12 +85,12 @@ class Config():
     text_lstm_hidden_dim = 512
     text_emb_dim = text_lstm_hidden_dim * 2
     text_lstm_layers = 2
-    text_lstm_dropout = 0.2
+    text_lstm_dropout = 0.1
     text_non_trainable = False
     # decoder
     dec_lstm_hidden_dim = 512
     dec_lstm_layers = 2
-    dec_lstm_dropout = 0.2
+    dec_lstm_dropout = 0.1
     
     # checkpoints
     pretrained_models = Path (r'pretrained_models')
