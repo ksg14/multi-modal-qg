@@ -289,10 +289,8 @@ if __name__ == '__main__':
 	epoch_stats, best_epoch = train (args, config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
 									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
-									dec_optimizer=dec_optimizer, criterion=criterion, n_epochs=config.epochs, \
-									device=device, context_max_len=config.context_max_lenth, \
-									av_max_len=config.av_max_length, \
-									pred_max_len=config.question_max_length)
+									dec_optimizer=dec_optimizer, criterion=criterion, \
+									device=device)
 
 	# validate (av_enc_model, text_enc_model, dec_model, val_dataloader, criterion, config.context_max_lenth, config.av_max_length, config.question_max_length, device)
 		
