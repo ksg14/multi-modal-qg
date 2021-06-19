@@ -47,7 +47,7 @@ class Decoder (Module):
         normal_ (self.out_layer.bias)
 
 class AttnDecoder (Module):
-    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, word_emb_dim, video_emb_dim, audio_emb_dim, emb_layer, text_max_length, av_max_length, device):
+    def __init__(self, num_layers, dropout_p, hidden_dim, n_vocab, text_emb_dim, word_emb_dim, video_emb_dim, audio_emb_dim, emb_layer, text_max_length, av_max_length, device):
         super(AttnDecoder, self).__init__()
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
@@ -57,6 +57,7 @@ class AttnDecoder (Module):
         self.av_max_length = av_max_length
         self.video_emb_dim = video_emb_dim
         self.audio_emb_dim = audio_emb_dim
+        self.text_emb_dim = text_emb_dim
         self.word_emb_dim = word_emb_dim
         self.emb_layer = emb_layer
         self.device = device
@@ -66,7 +67,7 @@ class AttnDecoder (Module):
         self.audio_attn = Linear (self.word_emb_dim + self.hidden_dim, self.av_max_length)
         # self.attn_combine = Linear (self.word_emb_dim + self.hidden_dim + self.av_emb_dim, self.hidden_dim)
         # self.dropout = Dropout (self.dropout_p)
-        self.lstm = LSTM (self.word_emb_dim + self.hidden_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
+        self.lstm = LSTM (self.word_emb_dim + self.text_emb_dim + self.audio_emb_dim + self.video_emb_dim, self.hidden_dim, self.num_layers, dropout=self.dropout_p)
         self.out_layer = Linear (self.hidden_dim, self.n_vocab)
 
         self.initialise_weights ()
