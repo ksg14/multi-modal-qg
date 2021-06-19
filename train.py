@@ -160,7 +160,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
 
 				text_enc_hidden = text_enc_model.init_state (1)
-				all_enc_outputs = torch.zeros (config.context_max_length, text_enc_model.hidden_dim).to (device)
+				all_enc_outputs = torch.zeros (config.context_max_length, 2*text_enc_model.hidden_dim).to (device)
 
 				loss = 0
 
