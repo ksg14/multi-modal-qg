@@ -153,8 +153,8 @@ class TextEncoder (Module):
                 normal_(param.data)
             
     def init_state(self, batch_sz):
-        return (torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device),
-                torch.zeros(self.num_layers, batch_sz, self.hidden_dim, device=self.device))
+        return (torch.zeros(2 * self.num_layers, batch_sz, self.hidden_dim, device=self.device),
+                torch.zeros(2 * self.num_layers, batch_sz, self.hidden_dim, device=self.device))
 
 class AudioVideoEncoder (Module):
     def __init__(self, video_hidden_dim, video_emb_dim, device, reload_vgg=False):
