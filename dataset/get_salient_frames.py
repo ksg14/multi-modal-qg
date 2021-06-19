@@ -62,10 +62,15 @@ if __name__ == '__main__':
 
     with open (questions_json, 'r') as file_io:
         questions = json.load (file_io)
+
+    id_to_use = set ([0, 85])
     
     for question in tqdm (questions):
         if len (question ['question']) == 0:
             break
+
+        if question ['question_id'] not in id_to_use:
+            continue
 
         status = save_salient_frames (save_path, frame_dim, question ['video_id'], question ['question_id'], question ['answer_start'], question ['answer_end'], video_path)
 
