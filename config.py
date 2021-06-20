@@ -26,7 +26,7 @@ class Config():
 
     # dataset
     # dataset_path = Path (r'C:\Users\karanjit.singh.gill\Desktop\VQG\dataset')
-    dataset_path = Path (r'../dataset')
+    dataset_path = Path (r'dataset')
     subs_path = dataset_path / 'subs'
     video_path = dataset_path / 'vids'
     audio_path = dataset_path / 'audio'

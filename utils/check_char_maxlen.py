@@ -23,10 +23,10 @@ def get_maxlen_frames (path):
     return max_len, avg_len / len (os.listdir (path))
 
 if __name__ == '__main__':
-    dataset_path = Path (r'../../dataset')
-    questions_file = '../data/preprocesses_text.json'
-    squad_prep_train_file = '../squad/prep_train.json'
-    squad_prep_val_file = '../squad/prep_val.json'
+    dataset_path = Path (r'dataset')
+    questions_file = 'data/preprocesses_text.json'
+    squad_prep_train_file = 'squad/prep_train.json'
+    squad_prep_val_file = 'squad/prep_val.json'
     frames_path = dataset_path / 'salient_frames'
 
     with open (questions_file, 'r') as file_io:
