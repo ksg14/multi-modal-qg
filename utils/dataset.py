@@ -29,6 +29,7 @@ class VQGDataset (Dataset):
         question_id = self.questions [idx] ['question_id']
         context_str = self.questions [idx] ['context']
         question_str = self.questions [idx] ['question']
+        answer_str = self.questions [idx] ['answer']
 
         # Text
         if self.text_transform:
