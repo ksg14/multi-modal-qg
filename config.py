@@ -79,7 +79,7 @@ class Config():
     vid_mean = [0.43216, 0.394666, 0.37645]
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 22
-    context_max_length = 163
+    context_max_length = 200
     char_question_max_length = 185
     char_context_max_length = 3063
     av_max_length = 47
