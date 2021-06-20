@@ -117,7 +117,7 @@ if __name__ == '__main__':
     with open (config.squad_prep_val_file, 'r', encoding="utf8") as file_io:
         prep_val = json.load (file_io)
 
-    vocab, index_to_char = build_vocab (prep_train + prep_val, preprocess_text)
+    vocab, index_to_char = build_vocab (prep_train + prep_val, preprocessed_text)
 
     if vocab:
         print (f'Unique words {len (vocab)}')
