@@ -232,7 +232,7 @@ if __name__ == '__main__':
 	video_transform = T.Compose ([ToFloatTensor ()])
 
 	train_dataset = SquadDataset (config.squad_prep_train_file, config.char_vocab_file, config.index_to_char_file, text_transform=prepare_char_seq)
-	val_dataset = SquadDataset (config.val_file, config.char_vocab_file, config.index_to_char_file, text_transform=prepare_char_seq)
+	val_dataset = SquadDataset (config.squad_prep_val_file, config.char_vocab_file, config.index_to_char_file, text_transform=prepare_char_seq)
 	train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=True)
 
