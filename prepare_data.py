@@ -63,11 +63,13 @@ def build_vocab (corpus):
     vocab ['<pad>'] = 0
     vocab ['<start>'] = 1
     vocab ['<end>'] = 2
-    vocab_idx = 3
+    vocab ['<sep>'] = 3
+    vocab_idx = 4
 
     index_to_word [0] = '<pad>'
     index_to_word [1] = '<start>'
     index_to_word [2] = '<end>'
+    index_to_word [3] = '<sep>'
 
     for entry in corpus:
         try:
