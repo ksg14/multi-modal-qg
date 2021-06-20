@@ -54,7 +54,7 @@ if __name__ == '__main__':
     save_path = 'salient_frames'
     video_path = 'vids'
     questions_json = 'labelled_questions.json'
-    frame_dim = (112, 112)
+    frame_dim = (224, 224)
 
     if not os.path.exists (save_path):
         print (f'{save_path} dir created')
@@ -62,10 +62,15 @@ if __name__ == '__main__':
 
     with open (questions_json, 'r') as file_io:
         questions = json.load (file_io)
+
+    # id_to_use = set ([0, 85])
     
     for question in tqdm (questions):
         if len (question ['question']) == 0:
             break
+
+        # if question ['question_id'] not in id_to_use:
+        #     continue
 
         status = save_salient_frames (save_path, frame_dim, question ['video_id'], question ['question_id'], question ['answer_start'], question ['answer_end'], video_path)
 

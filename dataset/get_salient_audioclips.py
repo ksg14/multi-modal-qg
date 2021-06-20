@@ -11,7 +11,7 @@ def clip_audio (save_path, video_id, question_id, answer_start, answer_end, audi
             answer_end = '0' + answer_end
 
         command = f"ffmpeg -hide_banner -loglevel panic -i {audio_path}/{video_id}.wav -ss 00:{answer_start} -to 00:{answer_end} -c copy {save_path}/v_{video_id}_q_{question_id}_.wav"
-        subprocess.call(command, shell=False)
+        subprocess.call(command, shell=True)
     except: 
         return 1
     return 0
@@ -30,10 +30,15 @@ if __name__ == '__main__':
 
     with open (questions_json, 'r') as file_io:
         questions = json.load (file_io)
-    
+
+    # id_to_use = set ([0, 85])
+
     for question in tqdm (questions):
         if len (question ['question']) == 0:
             break
+
+        # if question ['question_id'] not in id_to_use:
+        #     continue
 
         status = clip_audio (save_path, question ['video_id'], question ['question_id'], question ['answer_start'], question ['answer_end'], audio_path)
         if status == 1:

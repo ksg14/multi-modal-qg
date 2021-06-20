@@ -17,8 +17,8 @@ from model.encoder import AudioVideoEncoder, TextEncoder
 from model.decoder import AttnDecoder, Decoder
 
 from config import Config
-from utils.dataset import VQGDataset
-from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Normalize, prepare_sequence
+from utils.dataset import VQGDataset, SquadDataset
+from utils.custom_transforms import prepare_sequence, Resize, ToFloatTensor, Normalize, prepare_sequence, prepare_char_seq
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -47,18 +47,6 @@ def save_model (model, model_path):
 		print (f'unable to save model {str (Exception)}')
 	return
 
-def get_mem_usage (model):
-	mem_params = sum([param.nelement()*param.element_size() for param in model.parameters()])
-	mem_bufs = sum([buf.nelement()*buf.element_size() for buf in model.buffers()])
-	mem_usage = (mem_params + mem_bufs) / (1024 * 1024)
-	return mem_usage
-
-def repackage_hidden(h):
-	if isinstance(h, torch.Tensor):
-		return h.detach()
-	else:
-		return tuple(repackage_hidden(v) for v in h)
-
 def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader, criterion, device):
 	val_loss = 0.0
 	val_bleu = 0.0
@@ -68,23 +56,21 @@ def validate (args, config, av_enc_model, text_enc_model, dec_model, dataloader,
 	# val_bleu_4 = 0.0
 	n_len = len (dataloader)
 		
-	av_enc_model.eval () 
+	# av_enc_model.eval () 
 	text_enc_model.eval ()
 	dec_model.eval ()
 
 	with torch.no_grad ():
 		with tqdm(dataloader) as tepoch:
-			for frames, audio_file, context_tensor, question_id, question, target, context_len, target_len in tepoch:
-				frames, audio_file, context_tensor, question_id, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question_id, question, target.to (device), context_len.to (device), target_len.to (device)
+			for context_tensor, question, target, context_len, target_len in tepoch:
+				context_tensor, question, target, context_len, target_len = context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
 				
 				tepoch.set_description (f'Validating ...')
 
-				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
-
-				audio_frames = audio_emb.shape [0]
-				video_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-audio_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
+				audio_frames = 0
+				video_frames = 0
+				padded_audio_emb = torch.zeros (config.av_max_length, config.audio_emb, device=device)
+				padded_video_emb = torch.zeros (config.av_max_length, config.video_emb_dim, device=device)
 
 				text_enc_hidden = text_enc_model.init_state (1)
 				all_enc_outputs = torch.zeros (config.context_max_length, 2*text_enc_model.hidden_dim).to (device)
@@ -138,29 +124,27 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 	for epoch in range (args.epochs):
 		epoch_stats ['train']['loss'].append (0.0)
-		av_enc_model.train ()
+		# av_enc_model.train ()
 		text_enc_model.train ()
 		dec_model.train ()
 
 		with tqdm(train_dataloader) as tepoch:
-			for frames, audio_file, context_tensor, question_id, question, target, context_len, target_len in tepoch:
-				frames, audio_file, context_tensor, question_id, question, target, context_len, target_len = frames.to (device), audio_file, context_tensor.to (device), question_id, question, target.to (device), context_len.to (device), target_len.to (device)
+			for context_tensor, question, target, context_len, target_len in tepoch:
+				context_tensor, question, target, context_len, target_len = context_tensor.to (device), question, target.to (device), context_len.to (device), target_len.to (device)
 				
 				tepoch.set_description (f'Epoch {epoch}')
 
-				av_enc_optimizer.zero_grad()
+				# av_enc_optimizer.zero_grad()
 				text_enc_optimizer.zero_grad ()
 				dec_optimizer.zero_grad()
 
-				audio_emb, video_emb = av_enc_model (audio_file [0], frames)
-
-				audio_frames = audio_emb.shape [0]
-				video_frames = video_emb.shape [0]
-				padded_audio_emb = F.pad (audio_emb, (0, 0, 0, config.av_max_length-audio_frames))
-				padded_video_emb = F.pad (video_emb, (0, 0, 0, config.av_max_length-video_frames))
+				audio_frames = 0
+				video_frames = 0
+				padded_audio_emb = torch.zeros (config.av_max_length, config.audio_emb, device=device)
+				padded_video_emb = torch.zeros (config.av_max_length, config.video_emb_dim, device=device)
 
 				text_enc_hidden = text_enc_model.init_state (1)
-				all_enc_outputs = torch.zeros (config.context_max_length, 2*text_enc_model.hidden_dim).to (device)
+				all_enc_outputs = torch.zeros (config.char_context_max_length, 2*text_enc_model.hidden_dim, device=device)
 
 				loss = 0
 
@@ -179,7 +163,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 
 				loss.backward()
 
-				av_enc_optimizer.step()
+				# av_enc_optimizer.step()
 				text_enc_optimizer.step ()
 				dec_optimizer.step()
 
@@ -203,7 +187,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 			best_epoch = epoch
 
 			print ('Saving new best model !')
-			save_model (av_enc_model, config.av_model_path)
+			# save_model (av_enc_model, config.av_model_path)
 			save_model (text_enc_model, config.text_enc_model_path)
 			save_model (dec_model, config.dec_model_path)
 			save_weights (dec_model.emb_layer, config.learned_weight_path)
@@ -211,7 +195,7 @@ def train (args, config, av_enc_model, text_enc_model, dec_model, train_dataload
 		# Save last epoch model
 		if epoch == args.epochs-1:
 			print ('Saving last epoch model !')
-			save_model (av_enc_model, config.output_path / 'last_av_model.pth')
+			# save_model (av_enc_model, config.output_path / 'last_av_model.pth')
 			save_model (text_enc_model, config.output_path / 'last_text_enc.pth')
 			save_model (dec_model, config.output_path / 'last_decoder.pth')
 			save_weights (dec_model.emb_layer, config.output_path / 'last_weigths.pt')
@@ -228,7 +212,7 @@ if __name__ == '__main__':
 						help='print logs')
 	parser.add_argument('--epochs', type=int, default=100)
 	# parser.add_argument('--batch_sz', type=int, default=1)
-	parser.add_argument('--lr', type=float, default=1e-4)
+	parser.add_argument('--lr', type=float, default=1e-6)
 	parser.add_argument('--device', type=str, default='cpu')
 
 	args = parser.parse_args()
@@ -241,20 +225,22 @@ if __name__ == '__main__':
 	device = torch.device(args.device)
 	print(f'Device - {device}')
 
-	weights_matrix = torch.from_numpy(np.load (config.weights_matrix_file))
+	weights_matrix = torch.from_numpy(np.load (config.char_weights_matrix_file))
 	weights_matrix = weights_matrix.long ().to (device)
 		
 	# video_transform = T.Compose ([ToFloatTensor (), Resize (112)])
 	video_transform = T.Compose ([ToFloatTensor ()])
 
-	train_dataset = VQGDataset (config.train_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform=prepare_sequence, video_transform=video_transform)
-	val_dataset = VQGDataset (config.val_file, config.vocab_file, config.index_to_word_file, config.salient_frames_path, config.salient_audio_path, text_transform=prepare_sequence, video_transform=video_transform)
+	train_dataset = SquadDataset (config.squad_prep_train_file, config.char_vocab_file, config.index_to_char_file, text_transform=prepare_char_seq)
+	val_dataset = SquadDataset (config.squad_prep_val_file, config.char_vocab_file, config.index_to_char_file, text_transform=prepare_char_seq)
 	train_dataloader = DataLoader (train_dataset, batch_size=1, shuffle=True)
 	val_dataloader = DataLoader (val_dataset, batch_size=1, shuffle=True)
 
-	emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, False)	
+	emb_layer, n_vocab, emb_dim = create_emb_layer (weights_matrix, config.text_non_trainable)	
 
-	av_enc_model = AudioVideoEncoder (config.video_hidden_dim, config.video_emb_dim, device=device)		
+	print (f'Vocab - {n_vocab}')
+
+	# av_enc_model = AudioVideoEncoder (config.video_hidden_dim, config.video_emb_dim, device=device)		
 	# av_enc_model.load_state_dict(torch.load(config.pretrained_av_model, map_location=device))
 
 	text_enc_model = TextEncoder (num_layers=config.text_lstm_layers, \
@@ -273,23 +259,22 @@ if __name__ == '__main__':
 						video_emb_dim=config.video_hidden_dim, \
 						audio_emb_dim=config.audio_emb, \
 						emb_layer=emb_layer, \
-						text_max_length=config.context_max_length, \
+						text_max_length=config.char_context_max_length, \
 						av_max_length=config.av_max_length, \
 						device=device)
 
-	av_enc_model.to (device)
+	# av_enc_model.to (device)
 	text_enc_model.to (device)
 	dec_model.to (device)
 
 	criterion = CrossEntropyLoss()
-
-	av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
+	# av_enc_optimizer = Adam(av_enc_model.parameters(), lr=args.lr)
 	text_enc_optimizer = Adam(text_enc_model.parameters(), lr=args.lr)
 	dec_optimizer = Adam(dec_model.parameters(), lr=args.lr)
 
-	epoch_stats, best_epoch = train (args, config, av_enc_model=av_enc_model, text_enc_model=text_enc_model, dec_model=dec_model, \
+	epoch_stats, best_epoch = train (args, config, av_enc_model=None, text_enc_model=text_enc_model, dec_model=dec_model, \
 									train_dataloader=train_dataloader, val_dataloader=val_dataloader, \
-									av_enc_optimizer=av_enc_optimizer, text_enc_optimizer=text_enc_optimizer, \
+									av_enc_optimizer=None, text_enc_optimizer=text_enc_optimizer, \
 									dec_optimizer=dec_optimizer, criterion=criterion, \
 									device=device)
 

@@ -24,6 +24,24 @@ def prepare_sequence (seq, to_ix):
     idxs = [to_ix[w] for w in seq.split ()]
     return torch.tensor(idxs, dtype=torch.long)
 
+def is_special_tokens (token):
+    if token == '<start>' or token == '<end>' or token == '<pad>' or token == '<unk>' or token == '<sep>':
+        return True
+    return False
+
+def prepare_char_seq (text, wtoi):
+    tokens = text.split (' ')
+    ids = []
+    for tok in tokens:
+        if is_special_tokens (tok):
+            # print (f'{tok} - {wtoi [tok]}')
+            ids.append (wtoi [tok])
+        else:
+            for char in tok:
+                # print (f'{char} - {wtoi [char]}')
+                ids.append (wtoi [char])
+    return torch.tensor(ids, dtype=torch.long)
+
 class Resize(object):
     def __init__(self, size):
         self.size = size

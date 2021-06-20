@@ -36,3 +36,9 @@
 * 3 layer lstm with dropout
 * Attention on video frames
 * Attention on context words
+
+### Enc_Dec-1 :
+
+* Resnet video encoder
+* bilstm text encoder
+

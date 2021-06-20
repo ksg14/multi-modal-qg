@@ -1,9 +1,11 @@
 # Custom
 todo.txt
+out.txt
 salient*
 dataset/subs*
 dataset/questions*
 dataset/vid*
+dataset/*.json
 data/
 glove.6B/
 subs/
@@ -11,6 +13,8 @@ results/
 videos/
 frames/
 results/
+squad/
+pretrained_models/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
