@@ -79,7 +79,7 @@ class Config():
     vid_mean = [0.43216, 0.394666, 0.37645]
     vid_std = [0.22803, 0.22145, 0.216989]
     question_max_length = 22
-    context_max_length = 200
+    context_max_length = 162
     char_question_max_length = 185
     char_context_max_length = 3063
     av_max_length = 47
@@ -92,7 +92,7 @@ class Config():
     # flatten_dim = 1000
     # text encoder
     text_lstm_hidden_dim = 512
-    text_emb_dim = text_lstm_hidden_dim * 2
+    text_emb_dim = text_lstm_hidden_dim
     text_lstm_layers = 2
     text_lstm_dropout = 0.1
     text_non_trainable = True

@@ -33,7 +33,7 @@ class VQGDataset (Dataset):
 
         # Text
         if self.text_transform:
-            context_tensor = self.text_transform (f'{answer_str} <sep> {context_str}', self.vocab)
+            context_tensor = self.text_transform (context_str, self.vocab)
 
         # Video
         frames = torch.from_numpy (np.load (os.path.join (self.frames_path, f'v_{video_id}_q_{question_id}_.npy')))
@@ -84,7 +84,7 @@ class VQGCharDataset (Dataset):
 
         # Text
         if self.text_transform:
-            context_tensor = self.text_transform (f'{answer_str} <sep> {context_str}', self.vocab)
+            context_tensor = self.text_transform (context_str, self.vocab)
 
         # Video
         frames = torch.from_numpy (np.load (os.path.join (self.frames_path, f'v_{video_id}_q_{question_id}_.npy')))
